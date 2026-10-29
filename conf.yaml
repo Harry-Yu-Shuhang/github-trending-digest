@@ -1,8 +1,5 @@
 # Public configuration only. Never put API keys in this file.
-default_language: en
-languages:
-  - en
-  - zh-CN
+active_language: en
 programming_language: ""
 spoken_language: ""
 top_n: 25

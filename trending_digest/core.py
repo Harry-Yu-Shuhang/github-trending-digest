@@ -104,13 +104,12 @@ def parse_trending(html: str) -> list[dict]:
 def make_snapshot(repositories: list[dict], config: dict, now: datetime) -> dict:
     local = now.astimezone(ZoneInfo(config["timezone"]))
     return {
-        "schema_version": 2,
+        "schema_version": 3,
         "date": local.date().isoformat(),
         "fetched_at": local.isoformat(timespec="seconds"),
         "timezone": config["timezone"],
         "source_url": trending_url(config),
         "top_n": config["top_n"],
-        "default_language": config["default_language"],
-        "languages": config["languages"],
+        "active_language": config["active_language"],
         "repositories": repositories,
     }

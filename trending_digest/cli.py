@@ -48,19 +48,19 @@ def generate(
     html = html_path.read_text(encoding="utf-8") if html_path else fetch_html(trending_url(config))
     repositories = enrich_repositories(parse_trending(html), root, config, readme_dir)
     snapshot = make_snapshot(repositories, config, datetime.now().astimezone())
+    publish_snapshot(root, snapshot)
+    return snapshot
+
+
+def publish_snapshot(root: Path, snapshot: dict) -> None:
     day = snapshot["date"]
-    # Validate all languages and render before touching published artifacts.
+    # Render the active language before touching published artifacts.
     outputs = {}
-    default = config["default_language"]
-    for locale in config["languages"]:
-        readme_path = root / localized_name("README", locale, default)
-        outputs[readme_path] = update_readme(
-            readme_path.read_text(encoding="utf-8"), snapshot, locale
-        )
-        outputs[root / report_path(day, locale, default)] = render_digest(snapshot, locale)
-        outputs[root / localized_name("latest", locale, default)] = render_digest(
-            snapshot, locale, "latest"
-        )
+    locale = snapshot["active_language"]
+    readme_path = root / localized_name("README", locale)
+    outputs[readme_path] = update_readme(readme_path.read_text(encoding="utf-8"), snapshot, locale)
+    outputs[root / report_path(day, locale)] = render_digest(snapshot, locale)
+    outputs[root / "latest.md"] = render_digest(snapshot, locale, "latest")
     outputs.update(html_outputs(root, snapshot))
     atomic_write(
         root / f"data/{day[:4]}/{day[5:7]}/{day}.json",
@@ -68,17 +68,12 @@ def generate(
     )
     for path, content in outputs.items():
         atomic_write(path, content)
-    for locale in config["languages"]:
-        atomic_write(
-            root / "daily" / localized_name("README", locale, default),
-            archive_index(root, locale, config["languages"], default),
-        )
-    return snapshot
+    atomic_write(root / "daily/README.md", archive_index(root, locale))
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Generate bilingual README-based GitHub tech briefs"
+        description="Generate README-based tech briefs in the configured active language"
     )
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parent.parent)
     parser.add_argument("--config", type=Path, help="Defaults to root/conf.yaml")

@@ -46,15 +46,17 @@ def main() -> None:
         assert page.locator("html").get_attribute("data-theme") == "dark"
         page.screenshot(path=str(OUTPUT / "dark.png"))
         page.locator("#theme").click()
-        page.locator('.locale-switch a[lang="zh-CN"]').click()
-        assert page.locator("html").get_attribute("lang") == "zh-CN"
+        assert page.locator(".locale-switch a").count() == 1
+        assert page.locator(".locale-switch a").get_attribute("lang") == page.locator(
+            "html"
+        ).get_attribute("lang")
         assert page.locator(".project:visible").count() == total
         page.screenshot(path=str(OUTPUT / "chinese.png"))
         page.set_viewport_size({"width": 390, "height": 844})
         page.screenshot(path=str(OUTPUT / "mobile.png"))
         assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
         assert page.locator("#jump").is_visible()
-        target = page.locator(".project").nth(1).get_attribute("id")
+        target = page.locator(".project").nth(min(1, total - 1)).get_attribute("id")
         page.select_option("#jump", target)
         page.wait_for_timeout(500)
         assert page.evaluate("window.scrollY > 0")

@@ -119,14 +119,11 @@ def safe_url(value: str) -> str:
 
 def locale_links(snapshot: dict, locale: str, stem: str) -> str:
     labels = {"en": "EN", "zh-CN": "中文"}
-    links = []
-    for language in snapshot["languages"]:
-        current = ' aria-current="page"' if locale == language else ""
-        links.append(
-            f'<a href="{html_name(stem, language, snapshot["default_language"])}" '
-            f'lang="{language}" hreflang="{language}"{current}>{labels[language]}</a>'
-        )
-    return '<nav class="locale-switch" aria-label="Language">' + "".join(links) + "</nav>"
+    target = stem + ".html" if stem in {"index", "archive"} else html_name(stem, locale, "en")
+    return (
+        f'<nav class="locale-switch" aria-label="Language"><a href="{target}" '
+        f'lang="{locale}" aria-current="page">{labels[locale]}</a></nav>'
+    )
 
 
 def document(
@@ -150,7 +147,6 @@ def document(
         if locale == "en"
         else f"{day.year} 年 {day.month} 月 {day.day} 日"
     )
-    default = snapshot["default_language"]
     return template.substitute(
         locale=locale,
         page_title=escape(f"{text['brand']} · {snapshot['date']}"),
@@ -160,8 +156,8 @@ def document(
         brand=text["brand"],
         latest=text["latest"],
         archive=text["archive"],
-        latest_href=prefix + html_name("index", locale, default),
-        archive_href=prefix + html_name("archive", locale, default),
+        latest_href=prefix + "index.html",
+        archive_href=prefix + "archive.html",
         locale_links=locale_links(snapshot, locale, stem),
         theme=text["theme"],
         print_label=text["print"],
@@ -181,7 +177,8 @@ def document(
     )
 
 
-def render_html(snapshot: dict, locale: str = "en", *, latest: bool = False) -> str:
+def render_html(snapshot: dict, locale: str | None = None, *, latest: bool = False) -> str:
+    locale = locale or snapshot["active_language"]
     text = TEXT[locale]
     repos = snapshot["repositories"][: snapshot["top_n"]]
     cards, contents, jumps = [], [], []
@@ -299,10 +296,9 @@ def render_html(snapshot: dict, locale: str = "en", *, latest: bool = False) -> 
 
 def render_html_archive(snapshot: dict, locale: str, days: list[str]) -> str:
     text = TEXT[locale]
-    default = snapshot["default_language"]
     rows = []
     for day in days:
-        url = f"{day[:4]}/{day[5:7]}/{html_name(day, locale, default)}"
+        url = f"{day[:4]}/{day[5:7]}/{html_name(day, locale, 'en')}"
         rows.append(
             f'<a class="archive-issue" href="{url}"><div><span class="eyebrow">'
             f"{text['issue']}</span><h2>{day}</h2></div><span>{text['read']} {ARROW}</span></a>"
@@ -328,17 +324,12 @@ def html_outputs(root: Path, snapshot: dict) -> dict[Path, str]:
     outputs = {}
     reports = root / "reports"
     day = snapshot["date"]
-    default = snapshot["default_language"]
-    for locale in snapshot["languages"]:
-        dated = reports / day[:4] / day[5:7] / html_name(day, locale, default)
-        outputs[dated] = render_html(snapshot, locale)
-        outputs[reports / html_name("index", locale, default)] = render_html(
-            snapshot, locale, latest=True
-        )
-        suffix = "" if locale == default else "." + locale
-        prior = reports.glob(f"????/??/????-??-??{suffix}.html")
-        days = sorted({day, *(path.name[:10] for path in prior)}, reverse=True)
-        outputs[reports / html_name("archive", locale, default)] = render_html_archive(
-            snapshot, locale, days
-        )
+    locale = snapshot["active_language"]
+    dated = reports / day[:4] / day[5:7] / html_name(day, locale, "en")
+    outputs[dated] = render_html(snapshot, locale)
+    outputs[reports / "index.html"] = render_html(snapshot, locale, latest=True)
+    suffix = "" if locale == "en" else "." + locale
+    prior = reports.glob(f"????/??/????-??-??{suffix}.html")
+    days = sorted({day, *(path.name[:10] for path in prior)}, reverse=True)
+    outputs[reports / "archive.html"] = render_html_archive(snapshot, locale, days)
     return outputs

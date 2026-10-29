@@ -90,9 +90,12 @@ class DigestTests(unittest.TestCase):
     def test_repository_yaml_configuration_and_curated_notes_are_valid(self):
         root = Path(__file__).resolve().parent.parent
         config = load_config(root / "conf.yaml")
-        self.assertEqual(config["default_language"], "en")
-        self.assertEqual(config["languages"], ["en", "zh-CN"])
-        self.assertTrue(load_curated(root / config["summary"]["curated_file"], config["languages"]))
+        self.assertIn(config["active_language"], {"en", "zh-CN"})
+        self.assertNotIn("default_language", config)
+        self.assertNotIn("languages", config)
+        self.assertTrue(
+            load_curated(root / config["summary"]["curated_file"], [config["active_language"]])
+        )
 
     def test_empty_or_blocked_page_fails(self):
         for page in ("", "<html>Please sign in</html>", "<article class='Box-row'></article>"):
@@ -108,7 +111,12 @@ class DigestTests(unittest.TestCase):
 
     def test_bilingual_reports_have_project_cards_without_leaderboard(self):
         english = render_digest(self.snapshot)
-        chinese = render_digest(self.snapshot, "zh-CN")
+        config = {**self.config, "active_language": "zh-CN"}
+        with patch("trending_digest.readmes.fetch_readme", side_effect=readme_result):
+            repos = enrich_repositories(self.repos, self.root, config)
+        chinese = render_digest(
+            make_snapshot(repos, config, datetime(2026, 10, 28, 18, tzinfo=UTC))
+        )
         self.assertTrue(english.startswith("# GitHub Tech Brief"))
         self.assertTrue(chinese.startswith("# GitHub 技术快报"))
         self.assertIn("What it does", english)
@@ -117,16 +125,15 @@ class DigestTests(unittest.TestCase):
         self.assertNotIn("demo/database", english)
         self.assertNotIn("| ---", english)
         self.assertNotIn("完整榜单", chinese)
-        self.assertIn("2026-10-29.zh-CN.md", english)
-        self.assertIn("(2026-10-29.md)", chinese)
-        self.assertIn("(latest.zh-CN.md)", render_digest(self.snapshot, "en", "latest"))
+        self.assertNotIn("2026-10-29.zh-CN.md", english)
+        self.assertNotIn("(2026-10-29.md)", chinese)
 
     def test_extraction_uses_readme_not_trending_description(self):
         summary = self.enriched[0]["summary"]
         self.assertEqual(summary["status"], "extractive")
         self.assertIn("offline document toolkit", summary["locales"]["en"]["purpose"])
         self.assertNotIn("AI agent toolkit", summary["locales"]["en"]["purpose"])
-        self.assertIn("bilingual summary pending", render_digest(self.snapshot))
+        self.assertIn("summary pending", render_digest(self.snapshot))
 
     def test_cleaner_removes_code_hidden_text_and_scripts(self):
         cleaned = clean_readme(README)
@@ -148,7 +155,7 @@ class DigestTests(unittest.TestCase):
             enriched = enrich_repositories(self.repos, self.root, self.config)
         summary = enriched[0]["summary"]
         self.assertEqual(summary["status"], "curated")
-        self.assertEqual(summary["locales"]["zh-CN"]["purpose"], "将本地文档建立索引以便搜索。")
+        self.assertEqual(list(summary["locales"]), ["en"])
         changed = {**readme_result(), "sha": "b" * 40}
         with patch("trending_digest.readmes.fetch_readme", return_value=changed):
             self.assertEqual(
@@ -196,11 +203,11 @@ class DigestTests(unittest.TestCase):
         self.assertTrue(updated.endswith("\nKeep me\n"))
         self.assertNotIn("\nold\n", updated)
         self.assertEqual(update_readme(updated, self.snapshot), updated)
-        self.assertIn("2026-10-29.zh-CN.md", update_readme(readme, self.snapshot, "zh-CN"))
+        self.assertIn("2026-10-29.md", update_readme(readme, self.snapshot))
         with self.assertRaises(ValueError):
             update_readme("No markers", self.snapshot)
 
-    def test_generation_writes_both_languages_reruns_and_preserves_on_failure(self):
+    def test_generation_only_writes_active_language_and_preserves_other_editions(self):
         for name in ("README.md", "README.zh-CN.md"):
             (self.root / name).write_text("<!-- digest:start -->\n<!-- digest:end -->")
         with patch("trending_digest.readmes.fetch_readme", side_effect=readme_result):
@@ -208,16 +215,28 @@ class DigestTests(unittest.TestCase):
             generate(self.root, self.root / "conf.yaml", PAGE)
         day = first["date"]
         self.assertEqual(len(list((self.root / "data").rglob("*.json"))), 1)
-        self.assertTrue((self.root / "latest.zh-CN.md").exists())
+        self.assertFalse((self.root / "latest.zh-CN.md").exists())
         self.assertTrue((self.root / "reports/index.html").exists())
-        self.assertTrue((self.root / "reports/index.zh-CN.html").exists())
+        self.assertFalse((self.root / "reports/index.zh-CN.html").exists())
         self.assertTrue((self.root / f"reports/{day[:4]}/{day[5:7]}/{day}.html").exists())
+        english_readme = (self.root / "README.md").read_bytes()
+        english_issue = self.root / f"daily/{day[:4]}/{day[5:7]}/{day}.md"
+        english_content = english_issue.read_bytes()
+        write_config(self.root, active_language="zh-CN", top_n=1)
+        with patch("trending_digest.readmes.fetch_readme", side_effect=readme_result):
+            result = generate(self.root, self.root / "conf.yaml", PAGE)
+        self.assertEqual(result["active_language"], "zh-CN")
+        self.assertEqual(list(result["repositories"][0]["summary"]["locales"]), ["zh-CN"])
+        self.assertEqual(english_issue.read_bytes(), english_content)
+        self.assertEqual((self.root / "README.md").read_bytes(), english_readme)
         self.assertIn(
-            f"{day}.zh-CN.html",
-            (self.root / "reports/archive.zh-CN.html").read_text(encoding="utf-8"),
+            'lang="zh-CN"', (self.root / "reports/index.html").read_text(encoding="utf-8")
         )
         self.assertIn(
-            f"{day}.zh-CN.md", (self.root / "daily/README.zh-CN.md").read_text(encoding="utf-8")
+            f"{day}.zh-CN.html", (self.root / "reports/archive.html").read_text(encoding="utf-8")
+        )
+        self.assertIn(
+            f"{day}.zh-CN.md", (self.root / "daily/README.md").read_text(encoding="utf-8")
         )
         latest = (self.root / "latest.md").read_bytes()
         with patch("trending_digest.cli.fetch_html", return_value="Access denied"):
@@ -233,7 +252,7 @@ class DigestTests(unittest.TestCase):
     def test_archive_does_not_link_missing_language_files(self):
         (self.root / "data/2026/10").mkdir(parents=True)
         (self.root / "data/2026/10/2026-10-28.json").write_text("{}")
-        index = archive_index(self.root, "zh-CN", ["en", "zh-CN"], "en")
+        index = archive_index(self.root, "zh-CN")
         self.assertNotIn("2026-10-28", index)
 
     def test_retry_transient_trending_error(self):
@@ -249,8 +268,8 @@ class DigestTests(unittest.TestCase):
         for override in (
             {"top_n": 0},
             {"top_n": True},
-            {"languages": ["fr"]},
-            {"languages": ["en", "en"]},
+            {"active_language": "fr"},
+            {"active_language": ["en", "zh-CN"]},
             {"unknown": 1},
             {"summary": {"mode": "unimplemented"}},
             {"readme": {"workers": 0}},

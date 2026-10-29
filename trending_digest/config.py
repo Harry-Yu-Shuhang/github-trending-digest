@@ -15,11 +15,21 @@ def bounded_int(value: object, minimum: int, maximum: int, name: str) -> None:
 
 def load_config(path: Path) -> dict:
     config = yaml.safe_load(path.read_text(encoding="utf-8"))
+    return validate_config(config)
+
+
+def validate_config(config: object) -> dict:
     if not isinstance(config, dict):
         raise ValueError("conf.yaml must contain a mapping")
+    config = dict(config)
+    if "default_language" in config:
+        legacy = config.pop("default_language")
+        config.pop("languages", None)
+        if "active_language" in config and config["active_language"] != legacy:
+            raise ValueError("Conflicting active_language and legacy language settings")
+        config["active_language"] = legacy
     defaults = {
-        "default_language": "en",
-        "languages": ["en", "zh-CN"],
+        "active_language": "en",
         "programming_language": "",
         "spoken_language": "",
         "top_n": 25,
@@ -30,16 +40,11 @@ def load_config(path: Path) -> dict:
     if config.keys() - defaults.keys():
         raise ValueError(f"Unknown configuration keys: {config.keys() - defaults.keys()}")
     config = {**defaults, **config}
-    locales = config["languages"]
     if (
-        not isinstance(locales, list)
-        or not locales
-        or any(not isinstance(item, str) or item not in SUPPORTED_LANGUAGES for item in locales)
-        or len(set(locales)) != len(locales)
+        not isinstance(config["active_language"], str)
+        or config["active_language"] not in SUPPORTED_LANGUAGES
     ):
-        raise ValueError("languages must contain unique values from en, zh-CN")
-    if config["default_language"] not in locales:
-        raise ValueError("default_language must be included in languages")
+        raise ValueError("active_language must be en or zh-CN")
     bounded_int(config["top_n"], 1, 25, "top_n")
     for name in ("programming_language", "spoken_language", "timezone"):
         if not isinstance(config[name], str):
@@ -65,6 +70,9 @@ def load_config(path: Path) -> dict:
         raise ValueError("summary.mode must be curated or extractive")
     if config["summary"]["fallback"] != "extractive":
         raise ValueError("summary.fallback must be extractive")
-    if not isinstance(config["summary"]["curated_file"], str):
-        raise ValueError("summary.curated_file must be a string")
+    if (
+        not isinstance(config["summary"]["curated_file"], str)
+        or not config["summary"]["curated_file"].strip()
+    ):
+        raise ValueError("summary.curated_file must be a nonempty string")
     return config

@@ -21,8 +21,10 @@ COPY = {
         "stars": "stars",
         "today": "{count} today",
         "unknown": "Not specified",
-        "extractive": "README excerpts · bilingual summary pending. Source language preserved.",
+        "extractive": "README excerpts · summary pending in the selected language. "
+        "Source language preserved.",
         "unavailable": "README unavailable; no project claims have been generated.",
+        "pending": "No saved notes in this language. Fetch the README to prepare source excerpts.",
         "footer": "Project capabilities are summarized from the linked READMEs, not independently "
         "tested. Daily stars come from GitHub Trending at capture time.",
     },
@@ -40,8 +42,9 @@ COPY = {
         "stars": "Star",
         "today": "今日新增 {count} Star",
         "unknown": "未标注",
-        "extractive": "README 原文摘录 · 中英文概括待补充，以下保留来源语言。",
+        "extractive": "README 原文摘录 · 当前语言摘要待补充，以下保留来源语言。",
         "unavailable": "暂时无法读取 README，未生成项目能力介绍。",
+        "pending": "已保存的数据中没有该语言的摘要，请重新抓取 README 生成原文摘录。",
         "footer": "项目能力概括自所链接的 README，未经独立实测。"
         "今日新增 Star 来自采集时的 GitHub Trending。",
     },
@@ -65,22 +68,14 @@ def report_path(day: str, locale: str = "en", default: str = "en") -> str:
     return f"daily/{day[:4]}/{day[5:7]}/{localized_name(day, locale, default)}"
 
 
-def language_links(stem: str, languages: list[str], default: str) -> str:
-    labels = {"en": "English", "zh-CN": "简体中文"}
-    return " · ".join(
-        f"[{labels[locale]}]({localized_name(stem, locale, default)})" for locale in languages
-    )
-
-
-def render_digest(snapshot: dict, locale: str = "en", stem: str | None = None) -> str:
+def render_digest(snapshot: dict, locale: str | None = None, stem: str | None = None) -> str:
+    locale = locale or snapshot["active_language"]
     copy = COPY[locale]
     repos = snapshot["repositories"][: snapshot["top_n"]]
     lines = [
         f"# {copy['title']} · {snapshot['date']}",
         "",
-        language_links(
-            stem or snapshot["date"], snapshot["languages"], snapshot["default_language"]
-        ),
+        "English" if locale == "en" else "简体中文",
         "",
         f"{len(repos)} {copy['projects']}",
         "",
@@ -114,19 +109,20 @@ def render_digest(snapshot: dict, locale: str = "en", stem: str | None = None) -
     return "\n".join(lines)
 
 
-def archive_index(root: Path, locale: str, languages: list[str], default: str) -> str:
+def archive_index(root: Path, locale: str) -> str:
     days = sorted(
         (path.stem for path in (root / "data").glob("????/??/????-??-??.json")), reverse=True
     )
-    lines = [f"# {COPY[locale]['archive']}", "", language_links("README", languages, default), ""]
+    lines = [f"# {COPY[locale]['archive']}", ""]
     for day in days:
-        path = report_path(day, locale, default).removeprefix("daily/")
+        path = report_path(day, locale).removeprefix("daily/")
         if (root / "daily" / path).exists():
             lines.append(f"- [{day}]({path})")
     return "\n".join(lines) + "\n"
 
 
-def update_readme(readme: str, snapshot: dict, locale: str = "en") -> str:
+def update_readme(readme: str, snapshot: dict, locale: str | None = None) -> str:
+    locale = locale or snapshot["active_language"]
     start, end = "<!-- digest:start -->", "<!-- digest:end -->"
     if (
         readme.count(start) != 1
@@ -135,14 +131,13 @@ def update_readme(readme: str, snapshot: dict, locale: str = "en") -> str:
     ):
         raise ValueError("README must contain exactly one ordered digest marker pair")
     copy = COPY[locale]
-    default = snapshot["default_language"]
     lines = [
         start,
         "",
         f"### {snapshot['date']} · {copy['latest']}",
         "",
-        f"[{copy['read']}]({report_path(snapshot['date'], locale, default)}) · "
-        f"[{copy['all']}](daily/{localized_name('README', locale, default)})",
+        f"[{copy['read']}]({report_path(snapshot['date'], locale)}) · "
+        f"[{copy['all']}](daily/README.md)",
         "",
     ]
     for repo in snapshot["repositories"][: min(snapshot["top_n"], 3)]:

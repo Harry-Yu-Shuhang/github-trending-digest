@@ -4,7 +4,7 @@
 
 A daily introduction to interesting open-source projects from [GitHub Trending](https://github.com/trending?since=daily). Each project gets a short explanation of **what it does** and **what stands out**, grounded in its actual README.
 
-English is the default. Every issue and archive has a Simplified Chinese counterpart. There is no full leaderboard or generic advice section.
+Choose English or Simplified Chinese with `active_language`. It controls the Gradio interface and the only report language generated on that run. Existing historical editions remain available.
 
 <!-- digest:start -->
 
@@ -20,13 +20,29 @@ English is the default. Every issue and archive has a Simplified Chinese counter
 
 ## Read the brief
 
-- **[HTML reading edition](reports/index.html)** · [中文 HTML](reports/index.zh-CN.html)
-- [Latest issue in English](latest.md) · [中文快报](latest.zh-CN.md)
-- [Issue archive](daily/README.md) · [中文归档](daily/README.zh-CN.md)
+- **[Latest HTML report](reports/index.html)**
+- [Latest Markdown report](latest.md)
+- [Issue archive](daily/README.md)
 
 Project cards contain a concise purpose, up to three highlights, a link to the source README, and a small language / star line. All current Trending projects are covered by default, up to 25; `top_n` can reduce that number.
 
-The HTML edition has a reading directory, full-text search, programming-language filters, a dark mode, and a print / PDF layout. It adapts to mobile screens. Each HTML file embeds all styling and scripts and works directly from your local filesystem. After cloning or downloading this repository, open `reports/index.html` in a browser; GitHub's file viewer shows the HTML source. Dated editions and a bilingual archive are generated in `reports/` on every daily run.
+The HTML edition has a reading directory, full-text search, programming-language filters, a dark mode, and a print / PDF layout. It adapts to mobile screens. Each HTML file embeds all styling and scripts and works directly from your local filesystem. Open `reports/index.html` in a browser; GitHub's file viewer shows the HTML source. The latest entry and archive use the active language. Dated filenames retain their language identity; switching to Chinese does not rewrite archived English reports.
+
+## One-click configuration workspace
+
+- **Windows:** double-click `start.bat`.
+- **macOS:** double-click `start.command`, or run `sh start.command` from Terminal.
+- **Shared entry:** both wrappers prepare the same environment and run `start.py`.
+
+The launchers install uv if needed, prepare Python 3.12 and the optional UI dependencies, and open the local Gradio workspace at `http://127.0.0.1:7860`. The first run needs internet access. Close the terminal or press Ctrl+C to stop it. If a ZIP download loses the macOS executable bit, use `sh start.command`.
+
+The responsive form visualizes every setting in `conf.yaml`. Changing the language immediately translates the interface while preserving unsaved values. **Save configuration** persists validated settings. **Fetch & generate report** saves the form and fetches fresh Trending / README data. **Generate from saved data** saves the form and renders the last capture without network requests; source filters and capture timestamps stay those of the saved data. Preview and download the resulting HTML inside the workspace.
+
+To choose another port or skip browser opening:
+
+```sh
+uv run --frozen --extra ui --python 3.12 python start.py --port 7861 --no-browser
+```
 
 ## Run locally
 
@@ -45,8 +61,7 @@ Edit [conf.yaml](conf.yaml). The previous `config.json` has been replaced.
 
 | Setting | Meaning |
 | --- | --- |
-| `default_language` | Default README / report filenames; currently `en` |
-| `languages` | Output languages, currently `en` and `zh-CN` |
+| `active_language` | Interface and report language: `en` or `zh-CN`; generates just that language |
 | `programming_language` | Trending programming-language filter; empty means all |
 | `spoken_language` | Trending description-language filter; empty means all |
 | `top_n` | Number of project cards, from 1 to 25 |
@@ -57,19 +72,19 @@ Edit [conf.yaml](conf.yaml). The previous `config.json` has been replaced.
 | `summary.highlights` | Maximum highlights per project, from 1 to 5 |
 | `summary.fallback` | Currently `extractive`; new or changed sources get labelled excerpts |
 
-Changing the timezone does not change the workflow schedule.
+Changing the timezone does not change the workflow schedule. Older `default_language` configurations are migrated when loaded; saving writes only `active_language`.
 
 ## How summaries work
 
 The current bilingual notes in [summaries.yaml](summaries.yaml) were written by Codex after reading the source READMEs. Each entry is tied to a README blob SHA. It is reused only while that source version still matches.
 
-For a new or changed README, the daily job extracts source passages and labels them **bilingual summary pending**. It preserves the original language instead of claiming an automatic translation. Missing READMEs are labelled explicitly. A failed Trending fetch stops publication and preserves the existing brief.
+For a new or changed README, the daily job extracts source passages and labels the selected-language summary as pending. It preserves the original language instead of claiming an automatic translation. Missing READMEs are labelled explicitly. A failed Trending fetch stops publication and preserves the existing brief.
 
 No external model service or API key is configured. GitHub Actions does not have access to this Codex conversation. To refresh curated notes, ask Codex to read the current source README and update both languages and `readme_sha` in `summaries.yaml`; then regenerate. No unsupported model settings are included in the configuration.
 
 ## Daily automation
 
-[Daily Trending Digest](.github/workflows/daily.yml) runs at **01:17 UTC / 09:17 Asia/Shanghai** and commits both languages, archives, and JSON snapshots. You can also use **Actions → Daily Trending Digest → Run workflow**. It uses the repository's built-in `GITHUB_TOKEN` and requires no model secrets.
+[Daily Trending Digest](.github/workflows/daily.yml) runs at **01:17 UTC / 09:17 Asia/Shanghai** and commits the active-language report, archives, and JSON snapshot. You can also use **Actions → Daily Trending Digest → Run workflow**. It uses the repository's built-in `GITHUB_TOKEN` and requires no model secrets. To change the cloud schedule's report language, commit the updated `conf.yaml`; a local UI save does not push Git changes automatically.
 
 Scheduled runs can be delayed; see [GitHub's schedule documentation](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule). Forks must enable Actions. The workflow publishes only from the default branch.
 
@@ -85,18 +100,20 @@ Optional browser checks use an installed Chrome / Edge (or Playwright's Chromium
 
 ```sh
 uv run --with playwright python tests/browser_smoke.py
+uv run --extra ui --with playwright python tests/ui_browser_smoke.py
 ```
 
 For offline debugging, pass `--html path/to/trending.html --readme-dir path/to/readmes`. The README directory uses `owner/repo/README.md` plus `metadata.json` containing `sha`, `url`, and `path`. Offline generation still uses today's date.
 
 ```text
 README.md / README.zh-CN.md       English and Chinese documentation
-latest.md / latest.zh-CN.md       Latest project briefs
-reports/index.html               Latest English HTML report
-reports/index.zh-CN.html         Latest Chinese HTML report
+latest.md                        Latest report in the active language
+reports/index.html               Latest HTML report in the active language
+start.py                         Shared local UI entry
+start.bat / start.command        Windows / macOS startup wrappers
 reports/YYYY/MM/                 Dated, standalone HTML editions
 daily/YYYY/MM/                   Dated English / Chinese issues
-data/YYYY/MM/YYYY-MM-DD.json      Shared source metadata and bilingual summaries
+data/YYYY/MM/YYYY-MM-DD.json      Source metadata and active-language summaries
 conf.yaml                        Public configuration
 summaries.yaml                   Versioned, curated project summaries
 trending_digest/                 Fetching, extraction, localization, and CLI

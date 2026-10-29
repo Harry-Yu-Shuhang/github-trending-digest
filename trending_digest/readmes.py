@@ -145,7 +145,7 @@ def enrich_repositories(
     repos: list[dict], root: Path, config: dict, readme_dir: Path | None = None
 ) -> list[dict]:
     curated = (
-        load_curated(root / config["summary"]["curated_file"], config["languages"])
+        load_curated(root / config["summary"]["curated_file"], [config["active_language"]])
         if config["summary"]["mode"] == "curated"
         else {}
     )
@@ -182,7 +182,7 @@ def enrich_repositories(
                             : config["summary"]["highlights"]
                         ],
                     }
-                    for locale in config["languages"]
+                    for locale in [config["active_language"]]
                 },
             }
         else:
@@ -197,7 +197,7 @@ def enrich_repositories(
                 "needs_review": True,
                 "locales": {
                     locale: {"purpose": purpose, "highlights": highlights}
-                    for locale in config["languages"]
+                    for locale in [config["active_language"]]
                 },
             }
         return repo

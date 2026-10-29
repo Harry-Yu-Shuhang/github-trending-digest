@@ -18,8 +18,7 @@ class HtmlReportTests(unittest.TestCase):
             "fetched_at": "2026-10-29T09:17:00+08:00",
             "source_url": "https://github.com/trending?since=daily",
             "top_n": 1,
-            "languages": ["en", "zh-CN"],
-            "default_language": "en",
+            "active_language": "en",
             "repositories": [
                 {
                     "name": "example/project",
@@ -56,7 +55,8 @@ class HtmlReportTests(unittest.TestCase):
         self.assertEqual(len(english.select("h1")), 1)
         self.assertIsNone(english.select_one("script[src], link[rel=stylesheet], img[src]"))
         self.assertIsNotNone(english.select_one("style"))
-        self.assertIn("index.zh-CN.html", [link["href"] for link in english.select("a[href]")])
+        self.assertNotIn("index.zh-CN.html", [link["href"] for link in english.select("a[href]")])
+        self.assertEqual(len(english.select(".locale-switch a")), 1)
         self.assertIn(
             "../../archive.html",
             [
@@ -85,7 +85,7 @@ class HtmlReportTests(unittest.TestCase):
             old.parent.mkdir(parents=True)
             old.write_text("previous issue")
             outputs = html_outputs(root, self.snapshot)
-            self.assertEqual(len(outputs), 6)
+            self.assertEqual(len(outputs), 3)
             for path, text in outputs.items():
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_text(text, encoding="utf-8")
@@ -102,7 +102,8 @@ class HtmlReportTests(unittest.TestCase):
                     else:
                         self.assertTrue((path.parent / target).exists(), f"{path}: {target}")
             english = outputs[root / "reports/archive.html"]
-            chinese = outputs[root / "reports/archive.zh-CN.html"]
+            self.snapshot["active_language"] = "zh-CN"
+            chinese = html_outputs(root, self.snapshot)[root / "reports/archive.html"]
             self.assertIn("2026-10-28.html", english)
             self.assertNotIn("2026-10-28.zh-CN.html", chinese)
 

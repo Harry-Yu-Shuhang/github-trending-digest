@@ -7,6 +7,9 @@ readme = "README.md"
 license = "MIT"
 dependencies = ["beautifulsoup4>=4.13,<5", "tzdata>=2025.1", "PyYAML>=6,<7"]
 
+[project.optional-dependencies]
+ui = ["gradio>=6.31,<7"]
+
 [build-system]
 requires = ["hatchling>=1.27,<2"]
 build-backend = "hatchling.build"
