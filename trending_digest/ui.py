@@ -158,7 +158,8 @@ def report_preview(root: Path, locale: str) -> tuple[str, str | None]:
             content = html.escape(str(soup), quote=True)
             return (
                 f'<iframe class="report-frame" title="{TEXT[locale]["download"]}" '
-                    f'sandbox="allow-scripts allow-modals allow-popups allow-popups-to-escape-sandbox" '
+                'sandbox="allow-scripts allow-modals allow-popups '
+                'allow-popups-to-escape-sandbox" '
                 f'srcdoc="{content}"></iframe>',
                 str(path),
             )
