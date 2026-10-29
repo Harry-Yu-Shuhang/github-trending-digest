@@ -4,11 +4,11 @@ English
 
 14 projects, explained from their READMEs.
 
-> Captured: 2026-10-29T11:45:33+08:00 · [GitHub Trending](https://github.com/trending?since=daily)
+> Captured: 2026-10-29T11:47:26+08:00 · [GitHub Trending](https://github.com/trending?since=daily)
 
 ## [JetBrains/thinkrail](https://github.com/JetBrains/thinkrail)
 
-TypeScript · 5,232 stars · +1,068 today
+TypeScript · 5,234 stars · +1,068 today
 
 **What it does**
 
@@ -56,7 +56,7 @@ A composable skills framework that gives coding agents a software development pr
 
 ## [HKUDS/DeepTutor](https://github.com/HKUDS/DeepTutor)
 
-Python · 48,288 stars · +2,371 today
+Python · 48,291 stars · +2,371 today
 
 **What it does**
 
@@ -88,7 +88,7 @@ A shared team workspace that brings email, messages, documents, tasks, agents, a
 
 ## [Nutlope/hallmark](https://github.com/Nutlope/hallmark)
 
-CSS · 40,899 stars · +2,110 today
+CSS · 40,900 stars · +2,110 today
 
 **What it does**
 
@@ -104,7 +104,7 @@ A design skill for coding agents that builds and reviews websites around their a
 
 ## [pbakaus/impeccable](https://github.com/pbakaus/impeccable)
 
-Rust · 93,085 stars · +1,472 today
+Rust · 93,089 stars · +1,472 today
 
 **What it does**
 
@@ -120,7 +120,7 @@ A design vocabulary and review toolkit that helps coding agents improve existing
 
 ## [makecindy/cindy](https://github.com/makecindy/cindy)
 
-TypeScript · 8,202 stars · +728 today
+TypeScript · 8,204 stars · +728 today
 
 **What it does**
 
@@ -136,7 +136,7 @@ An open-source AI agent client that connects computers and phones so users can c
 
 ## [nightly-labs/openbot](https://github.com/nightly-labs/openbot)
 
-TypeScript · 3,355 stars · +1,054 today
+TypeScript · 3,357 stars · +1,054 today
 
 **What it does**
 
@@ -152,7 +152,7 @@ A local-first desktop workspace for persistent AI teammates, each with its own c
 
 ## [togg53192-cmd/jailbreaks](https://github.com/togg53192-cmd/jailbreaks)
 
-Not specified · 7,332 stars · +1,477 today
+Not specified · 7,336 stars · +1,477 today
 
 **What it does**
 
@@ -168,7 +168,7 @@ A research-oriented collection of model prompts and agent configuration examples
 
 ## [hmjz100/LinkSwift](https://github.com/hmjz100/LinkSwift)
 
-JavaScript · 35,191 stars · +1,616 today
+JavaScript · 35,195 stars · +1,616 today
 
 **What it does**
 
@@ -184,7 +184,7 @@ A browser userscript that obtains direct download links from supported cloud dri
 
 ## [expo/skills](https://github.com/expo/skills)
 
-Shell · 3,629 stars · +90 today
+Shell · 3,630 stars · +90 today
 
 **What it does**
 
@@ -200,7 +200,7 @@ Official Expo skills that teach coding agents how to build, debug, upgrade, and 
 
 ## [ruvnet/RuView](https://github.com/ruvnet/RuView)
 
-Rust · 101,172 stars · +557 today
+Rust · 101,174 stars · +557 today
 
 **What it does**
 
@@ -216,7 +216,7 @@ A WiFi sensing project exploring presence detection and spatial awareness withou
 
 ## [xiaolai/the-craft-of-selfteaching](https://github.com/xiaolai/the-craft-of-selfteaching)
 
-Jupyter Notebook · 18,610 stars · +148 today
+Jupyter Notebook · 18,611 stars · +148 today
 
 **What it does**
 

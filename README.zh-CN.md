@@ -53,7 +53,7 @@ uv sync --frozen
 uv run python -m trending_digest
 ```
 
-读取公开 README 不强制要求 Token。可通过环境变量 `GITHUB_TOKEN` 提高 GitHub API 限额；此 Token 仅发往 GitHub，不调用模型服务。
+读取公开 README 不强制要求 Token。可通过环境变量 `GITHUB_TOKEN` 提高 GitHub API 限额；界面启动时也会在可用时复用已有 GitHub CLI 登录。凭据仅在进程内存中使用，只发往 GitHub，不写入配置，也不调用模型服务。
 
 ## 配置
 

@@ -5,6 +5,8 @@ from __future__ import annotations
 import argparse
 import html
 import os
+import shutil
+import subprocess
 from importlib.resources import files
 from pathlib import Path
 
@@ -392,6 +394,27 @@ def main() -> None:
     parser.add_argument("--no-browser", action="store_true")
     args = parser.parse_args()
     root = args.root.resolve()
+    if not os.environ.get("GITHUB_TOKEN"):
+        token = os.environ.get("GH_TOKEN")
+        gh = shutil.which("gh")
+        portable = Path(__file__).resolve().parents[2] / ".tools/gh/gh.exe"
+        if not gh and portable.is_file():
+            gh = str(portable)
+        if not token and gh:
+            try:
+                result = subprocess.run(
+                    [gh, "auth", "token"],
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
+                    check=False,
+                )
+                if result.returncode == 0:
+                    token = result.stdout.strip()
+            except (OSError, subprocess.TimeoutExpired):
+                pass
+        if token:
+            os.environ["GITHUB_TOKEN"] = token
     app = create_ui(root)
     css = files("trending_digest").joinpath("templates/ui.css").read_text(encoding="utf-8")
     app.launch(

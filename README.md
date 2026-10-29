@@ -53,7 +53,7 @@ uv sync --frozen
 uv run python -m trending_digest
 ```
 
-Public READMEs can be fetched without a token. Set `GITHUB_TOKEN` to avoid the lower unauthenticated GitHub API limit. It is only sent to GitHub; no model API is called.
+Public READMEs can be fetched without a token. Set `GITHUB_TOKEN` to avoid the lower unauthenticated GitHub API limit. The UI launcher also reuses an existing GitHub CLI login when available. Credentials stay in process memory and are only sent to GitHub; no model API is called.
 
 ## Configuration
 

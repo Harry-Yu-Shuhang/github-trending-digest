@@ -1,19 +1,15 @@
-# Public configuration only. Never put API keys in this file.
+# Configuration for the local UI and report generator.
 active_language: en
-programming_language: ""
-spoken_language: ""
+programming_language: ''
+spoken_language: ''
 top_n: 25
 timezone: Asia/Shanghai
-
 readme:
   max_chars: 24000
   timeout_seconds: 30
   workers: 4
-
 summary:
-  # Codex-written bilingual summaries, matched against the actual README SHA.
   mode: curated
   curated_file: summaries.yaml
-  # New or changed READMEs get explicitly labelled source excerpts.
   fallback: extractive
   highlights: 3
