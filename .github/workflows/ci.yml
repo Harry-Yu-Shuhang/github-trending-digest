@@ -16,10 +16,11 @@ jobs:
         with:
           version: "0.13.0"
           enable-cache: true
-      - run: uv sync --frozen --python 3.12
-      - run: uv run ruff check .
-      - run: uv run ruff format --check .
-      - run: uv run python -m unittest discover -s tests -v
+          cache-dependency-glob: app/uv.lock
+      - run: uv sync --project app --frozen --python 3.12
+      - run: uv run --directory app ruff check .
+      - run: uv run --directory app ruff format --check .
+      - run: uv run --project app python -m unittest discover -s app/tests -v
 
   ui-launchers:
     strategy:
@@ -32,8 +33,9 @@ jobs:
         with:
           version: "0.13.0"
           enable-cache: true
-      - run: uv sync --frozen --extra ui --python 3.12
-      - run: uv run --extra ui python -m unittest discover -s tests -p test_ui.py -v
+          cache-dependency-glob: app/uv.lock
+      - run: uv sync --project app --frozen --extra ui --python 3.12
+      - run: uv run --project app --extra ui python -m unittest discover -s app/tests -p test_ui.py -v
       - if: runner.os == 'Windows'
         shell: cmd
         run: start.bat --help

@@ -26,18 +26,19 @@ jobs:
         with:
           version: "0.13.0"
           enable-cache: true
-      - run: uv sync --frozen --no-dev --python 3.12
+          cache-dependency-glob: app/uv.lock
+      - run: uv sync --project app --frozen --no-dev --python 3.12
       - name: Generate digest
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: uv run --no-dev python -m trending_digest
+        run: uv run --project app --no-dev python -m trending_digest
       - name: Commit and push
         shell: bash
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -- 'README*.md' 'latest*.md' daily data reports
+          git add -- README.md docs
           if git diff --cached --quiet; then
             echo "No digest changes."
             exit 0

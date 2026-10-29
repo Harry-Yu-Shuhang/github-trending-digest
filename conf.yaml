@@ -1,9 +1,18 @@
 # Configuration for the local UI and report generator.
+# active_language options: en (English), zh-CN (简体中文). Controls the GUI and report language.
 active_language: en
 programming_language: ''
 spoken_language: ''
 top_n: 25
 timezone: Asia/Shanghai
+# Enable to filter by literal keywords in names, descriptions, languages and READMEs.
+# The description records your goal; keywords perform matching (no model API).
+work_requirements:
+  enabled: false
+  description: ''
+  keywords: []
+  exclude_keywords: []
+  min_matches: 1
 readme:
   max_chars: 24000
   timeout_seconds: 30

@@ -1,8 +1,36 @@
 .venv/
+venv/
 __pycache__/
 *.py[cod]
 .ruff_cache/
 .cache/
+.pytest_cache/
+.mypy_cache/
+.tox/
+.nox/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# Named GUI configurations contain local work requirements.
+/configs/
+# Generated reports and snapshots stay local.
+/output/
+/data/
+*.local.yaml
+*.local.yml
+
+# Editors, operating-system metadata and temporary files.
+.idea/
+.vscode/
+.DS_Store
+._*
+Thumbs.db
+Desktop.ini
+*.tmp
+*.bak
+*~
 .env
 .env.*
 !.env.example
