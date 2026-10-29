@@ -4,7 +4,7 @@
 
 14 个项目，从 README 了解用途与亮点。
 
-> 采集时间: 2026-10-29T11:11:57+08:00 · [GitHub Trending](https://github.com/trending?since=daily)
+> 采集时间: 2026-10-29T11:12:19+08:00 · [GitHub Trending](https://github.com/trending?since=daily)
 
 ## [JetBrains/thinkrail](https://github.com/JetBrains/thinkrail)
 
@@ -88,7 +88,7 @@ Rust · 5,474 Star · 今日新增 +117 Star
 
 ## [Nutlope/hallmark](https://github.com/Nutlope/hallmark)
 
-CSS · 40,861 Star · 今日新增 +2,110 Star
+CSS · 40,862 Star · 今日新增 +2,110 Star
 
 **这是做什么的**
 
@@ -104,7 +104,7 @@ CSS · 40,861 Star · 今日新增 +2,110 Star
 
 ## [pbakaus/impeccable](https://github.com/pbakaus/impeccable)
 
-Rust · 93,005 Star · 今日新增 +1,472 Star
+Rust · 93,007 Star · 今日新增 +1,472 Star
 
 **这是做什么的**
 
@@ -136,7 +136,7 @@ TypeScript · 8,183 Star · 今日新增 +728 Star
 
 ## [nightly-labs/openbot](https://github.com/nightly-labs/openbot)
 
-TypeScript · 3,331 Star · 今日新增 +1,054 Star
+TypeScript · 3,332 Star · 今日新增 +1,054 Star
 
 **这是做什么的**
 
@@ -168,7 +168,7 @@ TypeScript · 3,331 Star · 今日新增 +1,054 Star
 
 ## [hmjz100/LinkSwift](https://github.com/hmjz100/LinkSwift)
 
-JavaScript · 35,104 Star · 今日新增 +1,616 Star
+JavaScript · 35,105 Star · 今日新增 +1,616 Star
 
 **这是做什么的**
 
@@ -184,7 +184,7 @@ JavaScript · 35,104 Star · 今日新增 +1,616 Star
 
 ## [expo/skills](https://github.com/expo/skills)
 
-Shell · 3,622 Star · 今日新增 +90 Star
+Shell · 3,623 Star · 今日新增 +90 Star
 
 **这是做什么的**
 

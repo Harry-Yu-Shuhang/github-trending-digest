@@ -4,7 +4,7 @@
 
 14 projects, explained from their READMEs.
 
-> Captured: 2026-10-29T11:11:57+08:00 · [GitHub Trending](https://github.com/trending?since=daily)
+> Captured: 2026-10-29T11:12:19+08:00 · [GitHub Trending](https://github.com/trending?since=daily)
 
 ## [JetBrains/thinkrail](https://github.com/JetBrains/thinkrail)
 
@@ -88,7 +88,7 @@ A shared team workspace that brings email, messages, documents, tasks, agents, a
 
 ## [Nutlope/hallmark](https://github.com/Nutlope/hallmark)
 
-CSS · 40,861 stars · +2,110 today
+CSS · 40,862 stars · +2,110 today
 
 **What it does**
 
@@ -104,7 +104,7 @@ A design skill for coding agents that builds and reviews websites around their a
 
 ## [pbakaus/impeccable](https://github.com/pbakaus/impeccable)
 
-Rust · 93,005 stars · +1,472 today
+Rust · 93,007 stars · +1,472 today
 
 **What it does**
 
@@ -136,7 +136,7 @@ An open-source AI agent client that connects computers and phones so users can c
 
 ## [nightly-labs/openbot](https://github.com/nightly-labs/openbot)
 
-TypeScript · 3,331 stars · +1,054 today
+TypeScript · 3,332 stars · +1,054 today
 
 **What it does**
 
@@ -168,7 +168,7 @@ A research-oriented collection of model prompts and agent configuration examples
 
 ## [hmjz100/LinkSwift](https://github.com/hmjz100/LinkSwift)
 
-JavaScript · 35,104 stars · +1,616 today
+JavaScript · 35,105 stars · +1,616 today
 
 **What it does**
 
@@ -184,7 +184,7 @@ A browser userscript that obtains direct download links from supported cloud dri
 
 ## [expo/skills](https://github.com/expo/skills)
 
-Shell · 3,622 stars · +90 today
+Shell · 3,623 stars · +90 today
 
 **What it does**
 

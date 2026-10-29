@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "date": "2026-10-29",
-  "fetched_at": "2026-10-29T11:11:57+08:00",
+  "fetched_at": "2026-10-29T11:12:19+08:00",
   "timezone": "Asia/Shanghai",
   "source_url": "https://github.com/trending?since=daily",
   "top_n": 25,
@@ -166,7 +166,7 @@
       "description": "Macro is a unified workspace for teams: email, chat, docs, tasks, agents, calls, and CRM — @-linked together with shared AI memory.",
       "language": "Rust",
       "stars": 5474,
-      "forks": 521,
+      "forks": 522,
       "stars_today": 117,
       "readme": {
         "sha": "9d8cd478cef941c2024d06e62d563481902aef61",
@@ -202,7 +202,7 @@
       "url": "https://github.com/Nutlope/hallmark",
       "description": "Anti-AI-slop design skill for Claude Code, Cursor, and Codex.",
       "language": "CSS",
-      "stars": 40861,
+      "stars": 40862,
       "forks": 2121,
       "stars_today": 2110,
       "readme": {
@@ -239,7 +239,7 @@
       "url": "https://github.com/pbakaus/impeccable",
       "description": "The design vocabulary for your coding agent. Steer with polish and bolder, review with critique and audit, catch AI slop before it ships.",
       "language": "Rust",
-      "stars": 93005,
+      "stars": 93007,
       "forks": 5490,
       "stars_today": 1472,
       "readme": {
@@ -313,7 +313,7 @@
       "url": "https://github.com/nightly-labs/openbot",
       "description": "A local-first desktop workspace for persistent AI teammates. Run Codex, Claude, and Grok with dedicated workspaces, task queues, file sharing, browser control, and agent-to-agent collaboration.",
       "language": "TypeScript",
-      "stars": 3331,
+      "stars": 3332,
       "forks": 318,
       "stars_today": 1054,
       "readme": {
@@ -387,7 +387,7 @@
       "url": "https://github.com/hmjz100/LinkSwift",
       "description": "一个基于 JavaScript 的网盘文件下载地址获取工具。基于【网盘直链下载助手】修改 ，支持 百度网盘 / 阿里云盘 / 中国移动云盘 / 天翼云盘 / 迅雷云盘 / 夸克网盘 / UC网盘 / 123云盘 八大网盘",
       "language": "JavaScript",
-      "stars": 35104,
+      "stars": 35105,
       "forks": 2494,
       "stars_today": 1616,
       "readme": {
@@ -424,7 +424,7 @@
       "url": "https://github.com/expo/skills",
       "description": "A collection of AI agent skills for working with Expo projects and Expo Application Services",
       "language": "Shell",
-      "stars": 3622,
+      "stars": 3623,
       "forks": 230,
       "stars_today": 90,
       "readme": {
