@@ -1,7 +1,7 @@
 {
   "schema_version": 3,
   "date": "2026-10-29",
-  "fetched_at": "2026-10-29T11:44:36+08:00",
+  "fetched_at": "2026-10-29T11:45:33+08:00",
   "timezone": "Asia/Shanghai",
   "source_url": "https://github.com/trending?since=daily",
   "top_n": 25,
@@ -42,7 +42,7 @@
       "url": "https://github.com/elayadesign/ai-design-skills",
       "description": "",
       "language": null,
-      "stars": 11297,
+      "stars": 11298,
       "forks": 817,
       "stars_today": 2139,
       "readme": {
@@ -158,7 +158,7 @@
       "url": "https://github.com/Nutlope/hallmark",
       "description": "Anti-AI-slop design skill for Claude Code, Cursor, and Codex.",
       "language": "CSS",
-      "stars": 40898,
+      "stars": 40899,
       "forks": 2121,
       "stars_today": 2110,
       "readme": {
@@ -187,7 +187,7 @@
       "url": "https://github.com/pbakaus/impeccable",
       "description": "The design vocabulary for your coding agent. Steer with polish and bolder, review with critique and audit, catch AI slop before it ships.",
       "language": "Rust",
-      "stars": 93082,
+      "stars": 93085,
       "forks": 5494,
       "stars_today": 1472,
       "readme": {
@@ -216,7 +216,7 @@
       "url": "https://github.com/makecindy/cindy",
       "description": "Consider it done. The open-source AI agent that works out of the box · 想到，就能做到。开源、开箱即用的 AI Agent。",
       "language": "TypeScript",
-      "stars": 8201,
+      "stars": 8202,
       "forks": 960,
       "stars_today": 728,
       "readme": {
@@ -274,7 +274,7 @@
       "url": "https://github.com/togg53192-cmd/jailbreaks",
       "description": "LIST OF ALL MY JAILBREAKS",
       "language": null,
-      "stars": 7331,
+      "stars": 7332,
       "forks": 1048,
       "stars_today": 1477,
       "readme": {
@@ -303,7 +303,7 @@
       "url": "https://github.com/hmjz100/LinkSwift",
       "description": "一个基于 JavaScript 的网盘文件下载地址获取工具。基于【网盘直链下载助手】修改 ，支持 百度网盘 / 阿里云盘 / 中国移动云盘 / 天翼云盘 / 迅雷云盘 / 夸克网盘 / UC网盘 / 123云盘 八大网盘",
       "language": "JavaScript",
-      "stars": 35187,
+      "stars": 35191,
       "forks": 2497,
       "stars_today": 1616,
       "readme": {
@@ -362,7 +362,7 @@
       "description": "π RuView turns commodity WiFi signals into real-time spatial intelligence, vital sign monitoring, and presence detection — all without a single pixel of video.",
       "language": "Rust",
       "stars": 101172,
-      "forks": 13166,
+      "forks": 13167,
       "stars_today": 557,
       "readme": {
         "sha": "98c12d7458694f70bfc68634638ca88429026f7f",
@@ -390,7 +390,7 @@
       "url": "https://github.com/xiaolai/the-craft-of-selfteaching",
       "description": "One has no future if one couldn't teach themself.",
       "language": "Jupyter Notebook",
-      "stars": 18609,
+      "stars": 18610,
       "forks": 17899,
       "stars_today": 148,
       "readme": {

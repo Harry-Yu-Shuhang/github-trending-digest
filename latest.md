@@ -4,7 +4,7 @@ English
 
 14 projects, explained from their READMEs.
 
-> Captured: 2026-10-29T11:44:36+08:00 · [GitHub Trending](https://github.com/trending?since=daily)
+> Captured: 2026-10-29T11:45:33+08:00 · [GitHub Trending](https://github.com/trending?since=daily)
 
 ## [JetBrains/thinkrail](https://github.com/JetBrains/thinkrail)
 
@@ -24,7 +24,7 @@ An agent-focused IDE built around the pi coding agent, combining code editing, i
 
 ## [elayadesign/ai-design-skills](https://github.com/elayadesign/ai-design-skills)
 
-Not specified · 11,297 stars · +2,139 today
+Not specified · 11,298 stars · +2,139 today
 
 **What it does**
 
@@ -88,7 +88,7 @@ A shared team workspace that brings email, messages, documents, tasks, agents, a
 
 ## [Nutlope/hallmark](https://github.com/Nutlope/hallmark)
 
-CSS · 40,898 stars · +2,110 today
+CSS · 40,899 stars · +2,110 today
 
 **What it does**
 
@@ -104,7 +104,7 @@ A design skill for coding agents that builds and reviews websites around their a
 
 ## [pbakaus/impeccable](https://github.com/pbakaus/impeccable)
 
-Rust · 93,082 stars · +1,472 today
+Rust · 93,085 stars · +1,472 today
 
 **What it does**
 
@@ -120,7 +120,7 @@ A design vocabulary and review toolkit that helps coding agents improve existing
 
 ## [makecindy/cindy](https://github.com/makecindy/cindy)
 
-TypeScript · 8,201 stars · +728 today
+TypeScript · 8,202 stars · +728 today
 
 **What it does**
 
@@ -152,7 +152,7 @@ A local-first desktop workspace for persistent AI teammates, each with its own c
 
 ## [togg53192-cmd/jailbreaks](https://github.com/togg53192-cmd/jailbreaks)
 
-Not specified · 7,331 stars · +1,477 today
+Not specified · 7,332 stars · +1,477 today
 
 **What it does**
 
@@ -168,7 +168,7 @@ A research-oriented collection of model prompts and agent configuration examples
 
 ## [hmjz100/LinkSwift](https://github.com/hmjz100/LinkSwift)
 
-JavaScript · 35,187 stars · +1,616 today
+JavaScript · 35,191 stars · +1,616 today
 
 **What it does**
 
@@ -216,7 +216,7 @@ A WiFi sensing project exploring presence detection and spatial awareness withou
 
 ## [xiaolai/the-craft-of-selfteaching](https://github.com/xiaolai/the-craft-of-selfteaching)
 
-Jupyter Notebook · 18,609 stars · +148 today
+Jupyter Notebook · 18,610 stars · +148 today
 
 **What it does**
 
