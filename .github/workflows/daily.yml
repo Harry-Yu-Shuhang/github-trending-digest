@@ -1,0 +1,45 @@
+name: Daily Trending Digest
+
+on:
+  schedule:
+    - cron: "17 1 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-trending-digest
+  cancel-in-progress: false
+
+jobs:
+  digest:
+    if: github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: "0.13.0"
+          enable-cache: true
+      - run: uv sync --frozen --no-dev --python 3.12
+      - name: Generate digest
+        run: uv run --no-dev python -m trending_digest
+      - name: Commit and push
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- README.md latest.md daily data
+          if git diff --cached --quiet; then
+            echo "No digest changes."
+            exit 0
+          fi
+          git commit -m "docs: update daily trending digest"
+          git pull --rebase origin "${{ github.event.repository.default_branch }}"
+          git push origin "HEAD:${{ github.event.repository.default_branch }}"
