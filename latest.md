@@ -4,11 +4,11 @@
 
 14 projects, explained from their READMEs.
 
-> Captured: 2026-10-29T11:12:19+08:00 · [GitHub Trending](https://github.com/trending?since=daily)
+> Captured: 2026-10-29T11:18:42+08:00 · [GitHub Trending](https://github.com/trending?since=daily)
 
 ## [JetBrains/thinkrail](https://github.com/JetBrains/thinkrail)
 
-TypeScript · 5,199 stars · +1,068 today
+TypeScript · 5,206 stars · +1,068 today
 
 **What it does**
 
@@ -24,7 +24,7 @@ An agent-focused IDE built around the pi coding agent, combining code editing, i
 
 ## [elayadesign/ai-design-skills](https://github.com/elayadesign/ai-design-skills)
 
-Not specified · 11,272 stars · +2,139 today
+Not specified · 11,277 stars · +2,139 today
 
 **What it does**
 
@@ -40,7 +40,7 @@ A modular collection of design skills for AI coding tools that can read Markdown
 
 ## [obra/superpowers](https://github.com/obra/superpowers)
 
-Shell · 307,540 stars · +1,095 today
+Shell · 307,542 stars · +1,095 today
 
 **What it does**
 
@@ -56,7 +56,7 @@ A composable skills framework that gives coding agents a software development pr
 
 ## [HKUDS/DeepTutor](https://github.com/HKUDS/DeepTutor)
 
-Python · 48,224 stars · +2,371 today
+Python · 48,246 stars · +2,371 today
 
 **What it does**
 
@@ -72,7 +72,7 @@ An agent-native learning workspace connecting personalized tutoring, problem sol
 
 ## [macro-inc/macro](https://github.com/macro-inc/macro)
 
-Rust · 5,474 stars · +117 today
+Rust · 5,477 stars · +117 today
 
 **What it does**
 
@@ -88,7 +88,7 @@ A shared team workspace that brings email, messages, documents, tasks, agents, a
 
 ## [Nutlope/hallmark](https://github.com/Nutlope/hallmark)
 
-CSS · 40,862 stars · +2,110 today
+CSS · 40,863 stars · +2,110 today
 
 **What it does**
 
@@ -104,7 +104,7 @@ A design skill for coding agents that builds and reviews websites around their a
 
 ## [pbakaus/impeccable](https://github.com/pbakaus/impeccable)
 
-Rust · 93,007 stars · +1,472 today
+Rust · 93,017 stars · +1,472 today
 
 **What it does**
 
@@ -120,7 +120,7 @@ A design vocabulary and review toolkit that helps coding agents improve existing
 
 ## [makecindy/cindy](https://github.com/makecindy/cindy)
 
-TypeScript · 8,183 stars · +728 today
+TypeScript · 8,186 stars · +728 today
 
 **What it does**
 
@@ -136,7 +136,7 @@ An open-source AI agent client that connects computers and phones so users can c
 
 ## [nightly-labs/openbot](https://github.com/nightly-labs/openbot)
 
-TypeScript · 3,332 stars · +1,054 today
+TypeScript · 3,336 stars · +1,054 today
 
 **What it does**
 
@@ -152,7 +152,7 @@ A local-first desktop workspace for persistent AI teammates, each with its own c
 
 ## [togg53192-cmd/jailbreaks](https://github.com/togg53192-cmd/jailbreaks)
 
-Not specified · 7,299 stars · +1,477 today
+Not specified · 7,303 stars · +1,477 today
 
 **What it does**
 
@@ -168,7 +168,7 @@ A research-oriented collection of model prompts and agent configuration examples
 
 ## [hmjz100/LinkSwift](https://github.com/hmjz100/LinkSwift)
 
-JavaScript · 35,105 stars · +1,616 today
+JavaScript · 35,124 stars · +1,616 today
 
 **What it does**
 
@@ -200,7 +200,7 @@ Official Expo skills that teach coding agents how to build, debug, upgrade, and 
 
 ## [ruvnet/RuView](https://github.com/ruvnet/RuView)
 
-Rust · 101,141 stars · +557 today
+Rust · 101,145 stars · +557 today
 
 **What it does**
 
@@ -216,7 +216,7 @@ A WiFi sensing project exploring presence detection and spatial awareness withou
 
 ## [xiaolai/the-craft-of-selfteaching](https://github.com/xiaolai/the-craft-of-selfteaching)
 
-Jupyter Notebook · 18,583 stars · +148 today
+Jupyter Notebook · 18,588 stars · +148 today
 
 **What it does**
 

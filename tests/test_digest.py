@@ -209,6 +209,13 @@ class DigestTests(unittest.TestCase):
         day = first["date"]
         self.assertEqual(len(list((self.root / "data").rglob("*.json"))), 1)
         self.assertTrue((self.root / "latest.zh-CN.md").exists())
+        self.assertTrue((self.root / "reports/index.html").exists())
+        self.assertTrue((self.root / "reports/index.zh-CN.html").exists())
+        self.assertTrue((self.root / f"reports/{day[:4]}/{day[5:7]}/{day}.html").exists())
+        self.assertIn(
+            f"{day}.zh-CN.html",
+            (self.root / "reports/archive.zh-CN.html").read_text(encoding="utf-8"),
+        )
         self.assertIn(
             f"{day}.zh-CN.md", (self.root / "daily/README.zh-CN.md").read_text(encoding="utf-8")
         )

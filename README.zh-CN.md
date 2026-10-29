@@ -20,10 +20,13 @@
 
 ## 阅读快报
 
+- **[中文 HTML 阅读版](reports/index.zh-CN.html)** · [English HTML](reports/index.html)
 - [最新中文快报](latest.zh-CN.md) · [English brief](latest.md)
 - [中文归档](daily/README.zh-CN.md) · [English archive](daily/README.md)
 
 每个项目包含用途概括、最多三项亮点、来源 README 链接，以及简短的编程语言和 Star 数据。默认介绍日榜全部项目，最多 25 个，也可通过 `top_n` 减少数量。
+
+HTML 阅读版包含跳转目录、全文搜索、编程语言筛选、深色模式和打印 / PDF 样式，并适配手机屏幕。每个文件都内嵌样式和脚本，可直接从本地打开。克隆或下载仓库后，在浏览器中打开 `reports/index.html` 或 `reports/index.zh-CN.html`；GitHub 文件页展示的是 HTML 源码。每日任务会同时生成 `reports/` 下的日期归档和双语归档页。
 
 ## 本地运行
 
@@ -78,11 +81,20 @@ uv run ruff format --check .
 uv run python -m unittest discover -s tests -v
 ```
 
+可选的浏览器检查使用本机 Chrome / Edge，或已安装的 Playwright Chromium：
+
+```sh
+uv run --with playwright python tests/browser_smoke.py
+```
+
 离线调试可指定 `--html path/to/trending.html --readme-dir path/to/readmes`。README 目录按 `owner/repo/README.md` 组织，同目录的 `metadata.json` 包含 `sha`、`url`、`path`。离线生成仍使用当天日期。
 
 ```text
 README.md / README.zh-CN.md       英文与中文说明
 latest.md / latest.zh-CN.md       最新一期快报
+reports/index.html               最新英文 HTML 报告
+reports/index.zh-CN.html         最新中文 HTML 报告
+reports/YYYY/MM/                 按日期归档的独立 HTML 报告
 daily/YYYY/MM/                   按日期归档的中英文快报
 data/YYYY/MM/YYYY-MM-DD.json      共享来源元数据与双语内容
 conf.yaml                        公开配置

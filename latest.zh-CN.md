@@ -4,11 +4,11 @@
 
 14 个项目，从 README 了解用途与亮点。
 
-> 采集时间: 2026-10-29T11:12:19+08:00 · [GitHub Trending](https://github.com/trending?since=daily)
+> 采集时间: 2026-10-29T11:18:42+08:00 · [GitHub Trending](https://github.com/trending?since=daily)
 
 ## [JetBrains/thinkrail](https://github.com/JetBrains/thinkrail)
 
-TypeScript · 5,199 Star · 今日新增 +1,068 Star
+TypeScript · 5,206 Star · 今日新增 +1,068 Star
 
 **这是做什么的**
 
@@ -24,7 +24,7 @@ TypeScript · 5,199 Star · 今日新增 +1,068 Star
 
 ## [elayadesign/ai-design-skills](https://github.com/elayadesign/ai-design-skills)
 
-未标注 · 11,272 Star · 今日新增 +2,139 Star
+未标注 · 11,277 Star · 今日新增 +2,139 Star
 
 **这是做什么的**
 
@@ -40,7 +40,7 @@ TypeScript · 5,199 Star · 今日新增 +1,068 Star
 
 ## [obra/superpowers](https://github.com/obra/superpowers)
 
-Shell · 307,540 Star · 今日新增 +1,095 Star
+Shell · 307,542 Star · 今日新增 +1,095 Star
 
 **这是做什么的**
 
@@ -56,7 +56,7 @@ Shell · 307,540 Star · 今日新增 +1,095 Star
 
 ## [HKUDS/DeepTutor](https://github.com/HKUDS/DeepTutor)
 
-Python · 48,224 Star · 今日新增 +2,371 Star
+Python · 48,246 Star · 今日新增 +2,371 Star
 
 **这是做什么的**
 
@@ -72,7 +72,7 @@ Python · 48,224 Star · 今日新增 +2,371 Star
 
 ## [macro-inc/macro](https://github.com/macro-inc/macro)
 
-Rust · 5,474 Star · 今日新增 +117 Star
+Rust · 5,477 Star · 今日新增 +117 Star
 
 **这是做什么的**
 
@@ -88,7 +88,7 @@ Rust · 5,474 Star · 今日新增 +117 Star
 
 ## [Nutlope/hallmark](https://github.com/Nutlope/hallmark)
 
-CSS · 40,862 Star · 今日新增 +2,110 Star
+CSS · 40,863 Star · 今日新增 +2,110 Star
 
 **这是做什么的**
 
@@ -104,7 +104,7 @@ CSS · 40,862 Star · 今日新增 +2,110 Star
 
 ## [pbakaus/impeccable](https://github.com/pbakaus/impeccable)
 
-Rust · 93,007 Star · 今日新增 +1,472 Star
+Rust · 93,017 Star · 今日新增 +1,472 Star
 
 **这是做什么的**
 
@@ -120,7 +120,7 @@ Rust · 93,007 Star · 今日新增 +1,472 Star
 
 ## [makecindy/cindy](https://github.com/makecindy/cindy)
 
-TypeScript · 8,183 Star · 今日新增 +728 Star
+TypeScript · 8,186 Star · 今日新增 +728 Star
 
 **这是做什么的**
 
@@ -136,7 +136,7 @@ TypeScript · 8,183 Star · 今日新增 +728 Star
 
 ## [nightly-labs/openbot](https://github.com/nightly-labs/openbot)
 
-TypeScript · 3,332 Star · 今日新增 +1,054 Star
+TypeScript · 3,336 Star · 今日新增 +1,054 Star
 
 **这是做什么的**
 
@@ -152,7 +152,7 @@ TypeScript · 3,332 Star · 今日新增 +1,054 Star
 
 ## [togg53192-cmd/jailbreaks](https://github.com/togg53192-cmd/jailbreaks)
 
-未标注 · 7,299 Star · 今日新增 +1,477 Star
+未标注 · 7,303 Star · 今日新增 +1,477 Star
 
 **这是做什么的**
 
@@ -168,7 +168,7 @@ TypeScript · 3,332 Star · 今日新增 +1,054 Star
 
 ## [hmjz100/LinkSwift](https://github.com/hmjz100/LinkSwift)
 
-JavaScript · 35,105 Star · 今日新增 +1,616 Star
+JavaScript · 35,124 Star · 今日新增 +1,616 Star
 
 **这是做什么的**
 
@@ -200,7 +200,7 @@ Expo 官方提供的编程智能体技能，覆盖 Expo 与 React Native 应用�
 
 ## [ruvnet/RuView](https://github.com/ruvnet/RuView)
 
-Rust · 101,141 Star · 今日新增 +557 Star
+Rust · 101,145 Star · 今日新增 +557 Star
 
 **这是做什么的**
 
@@ -216,7 +216,7 @@ Rust · 101,141 Star · 今日新增 +557 Star
 
 ## [xiaolai/the-craft-of-selfteaching](https://github.com/xiaolai/the-craft-of-selfteaching)
 
-Jupyter Notebook · 18,583 Star · 今日新增 +148 Star
+Jupyter Notebook · 18,588 Star · 今日新增 +148 Star
 
 **这是做什么的**
 

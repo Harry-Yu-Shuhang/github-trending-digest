@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "date": "2026-10-29",
-  "fetched_at": "2026-10-29T11:12:19+08:00",
+  "fetched_at": "2026-10-29T11:18:42+08:00",
   "timezone": "Asia/Shanghai",
   "source_url": "https://github.com/trending?since=daily",
   "top_n": 25,
@@ -17,7 +17,7 @@
       "url": "https://github.com/JetBrains/thinkrail",
       "description": "Vibe code with pi in a lightweight, real IDE that customises itself around the way you work — The Vibe You Need",
       "language": "TypeScript",
-      "stars": 5199,
+      "stars": 5206,
       "forks": 268,
       "stars_today": 1068,
       "readme": {
@@ -54,8 +54,8 @@
       "url": "https://github.com/elayadesign/ai-design-skills",
       "description": "",
       "language": null,
-      "stars": 11272,
-      "forks": 815,
+      "stars": 11277,
+      "forks": 816,
       "stars_today": 2139,
       "readme": {
         "sha": "32677792be09e0b9fba13b10c2f94a804c488900",
@@ -91,7 +91,7 @@
       "url": "https://github.com/obra/superpowers",
       "description": "An agentic skills framework & software development methodology that works.",
       "language": "Shell",
-      "stars": 307540,
+      "stars": 307542,
       "forks": 27352,
       "stars_today": 1095,
       "readme": {
@@ -128,7 +128,7 @@
       "url": "https://github.com/HKUDS/DeepTutor",
       "description": "DeepTutor: Lifelong Personalized Tutoring. https://deeptutor.info/ .",
       "language": "Python",
-      "stars": 48224,
+      "stars": 48246,
       "forks": 5976,
       "stars_today": 2371,
       "readme": {
@@ -165,7 +165,7 @@
       "url": "https://github.com/macro-inc/macro",
       "description": "Macro is a unified workspace for teams: email, chat, docs, tasks, agents, calls, and CRM — @-linked together with shared AI memory.",
       "language": "Rust",
-      "stars": 5474,
+      "stars": 5477,
       "forks": 522,
       "stars_today": 117,
       "readme": {
@@ -202,7 +202,7 @@
       "url": "https://github.com/Nutlope/hallmark",
       "description": "Anti-AI-slop design skill for Claude Code, Cursor, and Codex.",
       "language": "CSS",
-      "stars": 40862,
+      "stars": 40863,
       "forks": 2121,
       "stars_today": 2110,
       "readme": {
@@ -239,8 +239,8 @@
       "url": "https://github.com/pbakaus/impeccable",
       "description": "The design vocabulary for your coding agent. Steer with polish and bolder, review with critique and audit, catch AI slop before it ships.",
       "language": "Rust",
-      "stars": 93007,
-      "forks": 5490,
+      "stars": 93017,
+      "forks": 5491,
       "stars_today": 1472,
       "readme": {
         "sha": "8f27aa965cb56ab578d637e53f0392ae4e2d06db",
@@ -276,7 +276,7 @@
       "url": "https://github.com/makecindy/cindy",
       "description": "Consider it done. The open-source AI agent that works out of the box · 想到，就能做到。开源、开箱即用的 AI Agent。",
       "language": "TypeScript",
-      "stars": 8183,
+      "stars": 8186,
       "forks": 958,
       "stars_today": 728,
       "readme": {
@@ -313,8 +313,8 @@
       "url": "https://github.com/nightly-labs/openbot",
       "description": "A local-first desktop workspace for persistent AI teammates. Run Codex, Claude, and Grok with dedicated workspaces, task queues, file sharing, browser control, and agent-to-agent collaboration.",
       "language": "TypeScript",
-      "stars": 3332,
-      "forks": 318,
+      "stars": 3336,
+      "forks": 319,
       "stars_today": 1054,
       "readme": {
         "sha": "c895cf81d1cc77b64996ea44301bf7cb0fabb48c",
@@ -350,7 +350,7 @@
       "url": "https://github.com/togg53192-cmd/jailbreaks",
       "description": "LIST OF ALL MY JAILBREAKS",
       "language": null,
-      "stars": 7299,
+      "stars": 7303,
       "forks": 1045,
       "stars_today": 1477,
       "readme": {
@@ -387,7 +387,7 @@
       "url": "https://github.com/hmjz100/LinkSwift",
       "description": "一个基于 JavaScript 的网盘文件下载地址获取工具。基于【网盘直链下载助手】修改 ，支持 百度网盘 / 阿里云盘 / 中国移动云盘 / 天翼云盘 / 迅雷云盘 / 夸克网盘 / UC网盘 / 123云盘 八大网盘",
       "language": "JavaScript",
-      "stars": 35105,
+      "stars": 35124,
       "forks": 2494,
       "stars_today": 1616,
       "readme": {
@@ -461,7 +461,7 @@
       "url": "https://github.com/ruvnet/RuView",
       "description": "π RuView turns commodity WiFi signals into real-time spatial intelligence, vital sign monitoring, and presence detection — all without a single pixel of video.",
       "language": "Rust",
-      "stars": 101141,
+      "stars": 101145,
       "forks": 13166,
       "stars_today": 557,
       "readme": {
@@ -498,7 +498,7 @@
       "url": "https://github.com/xiaolai/the-craft-of-selfteaching",
       "description": "One has no future if one couldn't teach themself.",
       "language": "Jupyter Notebook",
-      "stars": 18583,
+      "stars": 18588,
       "forks": 17897,
       "stars_today": 148,
       "readme": {

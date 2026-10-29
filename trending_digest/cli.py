@@ -19,6 +19,7 @@ from .core import (
     parse_trending,
     trending_url,
 )
+from .html_report import html_outputs
 from .readmes import enrich_repositories
 from .render import archive_index, localized_name, render_digest, report_path, update_readme
 
@@ -60,6 +61,7 @@ def generate(
         outputs[root / localized_name("latest", locale, default)] = render_digest(
             snapshot, locale, "latest"
         )
+    outputs.update(html_outputs(root, snapshot))
     atomic_write(
         root / f"data/{day[:4]}/{day[5:7]}/{day}.json",
         json.dumps(snapshot, ensure_ascii=False, indent=2) + "\n",

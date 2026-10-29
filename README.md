@@ -20,10 +20,13 @@ English is the default. Every issue and archive has a Simplified Chinese counter
 
 ## Read the brief
 
+- **[HTML reading edition](reports/index.html)** · [中文 HTML](reports/index.zh-CN.html)
 - [Latest issue in English](latest.md) · [中文快报](latest.zh-CN.md)
 - [Issue archive](daily/README.md) · [中文归档](daily/README.zh-CN.md)
 
 Project cards contain a concise purpose, up to three highlights, a link to the source README, and a small language / star line. All current Trending projects are covered by default, up to 25; `top_n` can reduce that number.
+
+The HTML edition has a reading directory, full-text search, programming-language filters, a dark mode, and a print / PDF layout. It adapts to mobile screens. Each HTML file embeds all styling and scripts and works directly from your local filesystem. After cloning or downloading this repository, open `reports/index.html` in a browser; GitHub's file viewer shows the HTML source. Dated editions and a bilingual archive are generated in `reports/` on every daily run.
 
 ## Run locally
 
@@ -78,11 +81,20 @@ uv run ruff format --check .
 uv run python -m unittest discover -s tests -v
 ```
 
+Optional browser checks use an installed Chrome / Edge (or Playwright's Chromium):
+
+```sh
+uv run --with playwright python tests/browser_smoke.py
+```
+
 For offline debugging, pass `--html path/to/trending.html --readme-dir path/to/readmes`. The README directory uses `owner/repo/README.md` plus `metadata.json` containing `sha`, `url`, and `path`. Offline generation still uses today's date.
 
 ```text
 README.md / README.zh-CN.md       English and Chinese documentation
 latest.md / latest.zh-CN.md       Latest project briefs
+reports/index.html               Latest English HTML report
+reports/index.zh-CN.html         Latest Chinese HTML report
+reports/YYYY/MM/                 Dated, standalone HTML editions
 daily/YYYY/MM/                   Dated English / Chinese issues
 data/YYYY/MM/YYYY-MM-DD.json      Shared source metadata and bilingual summaries
 conf.yaml                        Public configuration
