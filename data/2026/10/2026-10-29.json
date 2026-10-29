@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "date": "2026-10-29",
-  "fetched_at": "2026-10-29T11:18:42+08:00",
+  "fetched_at": "2026-10-29T11:19:22+08:00",
   "timezone": "Asia/Shanghai",
   "source_url": "https://github.com/trending?since=daily",
   "top_n": 25,
@@ -91,7 +91,7 @@
       "url": "https://github.com/obra/superpowers",
       "description": "An agentic skills framework & software development methodology that works.",
       "language": "Shell",
-      "stars": 307542,
+      "stars": 307545,
       "forks": 27352,
       "stars_today": 1095,
       "readme": {
@@ -128,8 +128,8 @@
       "url": "https://github.com/HKUDS/DeepTutor",
       "description": "DeepTutor: Lifelong Personalized Tutoring. https://deeptutor.info/ .",
       "language": "Python",
-      "stars": 48246,
-      "forks": 5976,
+      "stars": 48247,
+      "forks": 5977,
       "stars_today": 2371,
       "readme": {
         "sha": "aa5ccfc3c70844364839428d772f2a70a196adf5",
@@ -239,7 +239,7 @@
       "url": "https://github.com/pbakaus/impeccable",
       "description": "The design vocabulary for your coding agent. Steer with polish and bolder, review with critique and audit, catch AI slop before it ships.",
       "language": "Rust",
-      "stars": 93017,
+      "stars": 93019,
       "forks": 5491,
       "stars_today": 1472,
       "readme": {
@@ -276,7 +276,7 @@
       "url": "https://github.com/makecindy/cindy",
       "description": "Consider it done. The open-source AI agent that works out of the box · 想到，就能做到。开源、开箱即用的 AI Agent。",
       "language": "TypeScript",
-      "stars": 8186,
+      "stars": 8187,
       "forks": 958,
       "stars_today": 728,
       "readme": {
@@ -350,7 +350,7 @@
       "url": "https://github.com/togg53192-cmd/jailbreaks",
       "description": "LIST OF ALL MY JAILBREAKS",
       "language": null,
-      "stars": 7303,
+      "stars": 7307,
       "forks": 1045,
       "stars_today": 1477,
       "readme": {
@@ -387,7 +387,7 @@
       "url": "https://github.com/hmjz100/LinkSwift",
       "description": "一个基于 JavaScript 的网盘文件下载地址获取工具。基于【网盘直链下载助手】修改 ，支持 百度网盘 / 阿里云盘 / 中国移动云盘 / 天翼云盘 / 迅雷云盘 / 夸克网盘 / UC网盘 / 123云盘 八大网盘",
       "language": "JavaScript",
-      "stars": 35124,
+      "stars": 35126,
       "forks": 2494,
       "stars_today": 1616,
       "readme": {
@@ -498,7 +498,7 @@
       "url": "https://github.com/xiaolai/the-craft-of-selfteaching",
       "description": "One has no future if one couldn't teach themself.",
       "language": "Jupyter Notebook",
-      "stars": 18588,
+      "stars": 18590,
       "forks": 17897,
       "stars_today": 148,
       "readme": {

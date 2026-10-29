@@ -4,7 +4,7 @@
 
 14 个项目，从 README 了解用途与亮点。
 
-> 采集时间: 2026-10-29T11:18:42+08:00 · [GitHub Trending](https://github.com/trending?since=daily)
+> 采集时间: 2026-10-29T11:19:22+08:00 · [GitHub Trending](https://github.com/trending?since=daily)
 
 ## [JetBrains/thinkrail](https://github.com/JetBrains/thinkrail)
 
@@ -40,7 +40,7 @@ TypeScript · 5,206 Star · 今日新增 +1,068 Star
 
 ## [obra/superpowers](https://github.com/obra/superpowers)
 
-Shell · 307,542 Star · 今日新增 +1,095 Star
+Shell · 307,545 Star · 今日新增 +1,095 Star
 
 **这是做什么的**
 
@@ -56,7 +56,7 @@ Shell · 307,542 Star · 今日新增 +1,095 Star
 
 ## [HKUDS/DeepTutor](https://github.com/HKUDS/DeepTutor)
 
-Python · 48,246 Star · 今日新增 +2,371 Star
+Python · 48,247 Star · 今日新增 +2,371 Star
 
 **这是做什么的**
 
@@ -104,7 +104,7 @@ CSS · 40,863 Star · 今日新增 +2,110 Star
 
 ## [pbakaus/impeccable](https://github.com/pbakaus/impeccable)
 
-Rust · 93,017 Star · 今日新增 +1,472 Star
+Rust · 93,019 Star · 今日新增 +1,472 Star
 
 **这是做什么的**
 
@@ -120,7 +120,7 @@ Rust · 93,017 Star · 今日新增 +1,472 Star
 
 ## [makecindy/cindy](https://github.com/makecindy/cindy)
 
-TypeScript · 8,186 Star · 今日新增 +728 Star
+TypeScript · 8,187 Star · 今日新增 +728 Star
 
 **这是做什么的**
 
@@ -152,7 +152,7 @@ TypeScript · 3,336 Star · 今日新增 +1,054 Star
 
 ## [togg53192-cmd/jailbreaks](https://github.com/togg53192-cmd/jailbreaks)
 
-未标注 · 7,303 Star · 今日新增 +1,477 Star
+未标注 · 7,307 Star · 今日新增 +1,477 Star
 
 **这是做什么的**
 
@@ -168,7 +168,7 @@ TypeScript · 3,336 Star · 今日新增 +1,054 Star
 
 ## [hmjz100/LinkSwift](https://github.com/hmjz100/LinkSwift)
 
-JavaScript · 35,124 Star · 今日新增 +1,616 Star
+JavaScript · 35,126 Star · 今日新增 +1,616 Star
 
 **这是做什么的**
 
@@ -216,7 +216,7 @@ Rust · 101,145 Star · 今日新增 +557 Star
 
 ## [xiaolai/the-craft-of-selfteaching](https://github.com/xiaolai/the-craft-of-selfteaching)
 
-Jupyter Notebook · 18,588 Star · 今日新增 +148 Star
+Jupyter Notebook · 18,590 Star · 今日新增 +148 Star
 
 **这是做什么的**
 

@@ -4,7 +4,7 @@
 
 14 projects, explained from their READMEs.
 
-> Captured: 2026-10-29T11:18:42+08:00 · [GitHub Trending](https://github.com/trending?since=daily)
+> Captured: 2026-10-29T11:19:22+08:00 · [GitHub Trending](https://github.com/trending?since=daily)
 
 ## [JetBrains/thinkrail](https://github.com/JetBrains/thinkrail)
 
@@ -40,7 +40,7 @@ A modular collection of design skills for AI coding tools that can read Markdown
 
 ## [obra/superpowers](https://github.com/obra/superpowers)
 
-Shell · 307,542 stars · +1,095 today
+Shell · 307,545 stars · +1,095 today
 
 **What it does**
 
@@ -56,7 +56,7 @@ A composable skills framework that gives coding agents a software development pr
 
 ## [HKUDS/DeepTutor](https://github.com/HKUDS/DeepTutor)
 
-Python · 48,246 stars · +2,371 today
+Python · 48,247 stars · +2,371 today
 
 **What it does**
 
@@ -104,7 +104,7 @@ A design skill for coding agents that builds and reviews websites around their a
 
 ## [pbakaus/impeccable](https://github.com/pbakaus/impeccable)
 
-Rust · 93,017 stars · +1,472 today
+Rust · 93,019 stars · +1,472 today
 
 **What it does**
 
@@ -120,7 +120,7 @@ A design vocabulary and review toolkit that helps coding agents improve existing
 
 ## [makecindy/cindy](https://github.com/makecindy/cindy)
 
-TypeScript · 8,186 stars · +728 today
+TypeScript · 8,187 stars · +728 today
 
 **What it does**
 
@@ -152,7 +152,7 @@ A local-first desktop workspace for persistent AI teammates, each with its own c
 
 ## [togg53192-cmd/jailbreaks](https://github.com/togg53192-cmd/jailbreaks)
 
-Not specified · 7,303 stars · +1,477 today
+Not specified · 7,307 stars · +1,477 today
 
 **What it does**
 
@@ -168,7 +168,7 @@ A research-oriented collection of model prompts and agent configuration examples
 
 ## [hmjz100/LinkSwift](https://github.com/hmjz100/LinkSwift)
 
-JavaScript · 35,124 stars · +1,616 today
+JavaScript · 35,126 stars · +1,616 today
 
 **What it does**
 
@@ -216,7 +216,7 @@ A WiFi sensing project exploring presence detection and spatial awareness withou
 
 ## [xiaolai/the-craft-of-selfteaching](https://github.com/xiaolai/the-craft-of-selfteaching)
 
-Jupyter Notebook · 18,588 stars · +148 today
+Jupyter Notebook · 18,590 stars · +148 today
 
 **What it does**
 
