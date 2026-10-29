@@ -1,33 +1,82 @@
 from __future__ import annotations
 
+import base64
 import json
 import tempfile
 import unittest
 from datetime import UTC, datetime
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 from urllib.error import HTTPError
 
+import yaml
+
 from trending_digest.cli import generate
+from trending_digest.config import load_config
 from trending_digest.core import (
     fetch_html,
-    load_config,
     make_snapshot,
     parse_count,
     parse_trending,
-    previous_snapshot,
     trending_url,
 )
-from trending_digest.render import movement, render_digest, update_readme
+from trending_digest.readmes import (
+    clean_readme,
+    enrich_repositories,
+    extract_passages,
+    fetch_readme,
+    load_curated,
+)
+from trending_digest.render import archive_index, render_digest, update_readme
 
-FIXTURE = Path(__file__).parent / "fixtures/trending.html"
-CONFIG = {"language": "", "spoken_language": "", "top_n": 1, "timezone": "Asia/Shanghai"}
+FIXTURES = Path(__file__).parent / "fixtures"
+PAGE = FIXTURES / "trending.html"
+README = (FIXTURES / "project-readme.md").read_text(encoding="utf-8")
+SHA = "a" * 40
+
+
+def write_config(root: Path, **overrides) -> dict:
+    path = root / "conf.yaml"
+    path.write_text(yaml.safe_dump(overrides), encoding="utf-8")
+    return load_config(path)
+
+
+def readme_result(*args) -> dict:
+    return {
+        "sha": SHA,
+        "url": "https://github.com/demo/agent-kit/blob/main/README.md",
+        "path": "README.md",
+        "status": "ok",
+        "text": README,
+    }
+
+
+def curated_entry() -> dict:
+    return {
+        "readme_sha": SHA,
+        "en": {
+            "purpose": "Indexes local documents for search.",
+            "highlights": ["Preserves source references.", "Rebuilds incrementally."],
+        },
+        "zh-CN": {
+            "purpose": "将本地文档建立索引以便搜索。",
+            "highlights": ["保留来源引用。", "支持增量构建。"],
+        },
+    }
 
 
 class DigestTests(unittest.TestCase):
     def setUp(self):
-        self.repos = parse_trending(FIXTURE.read_text(encoding="utf-8"))
-        self.snapshot = make_snapshot(self.repos, CONFIG, datetime(2026, 10, 28, 18, tzinfo=UTC))
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        self.config = write_config(self.root, top_n=1)
+        self.repos = parse_trending(PAGE.read_text(encoding="utf-8"))
+        with patch("trending_digest.readmes.fetch_readme", side_effect=readme_result):
+            self.enriched = enrich_repositories(self.repos, self.root, self.config)
+        self.snapshot = make_snapshot(
+            self.enriched, self.config, datetime(2026, 10, 28, 18, tzinfo=UTC)
+        )
 
     def test_parse_order_counts_missing_and_duplicates(self):
         self.assertEqual([r["name"] for r in self.repos], ["demo/agent-kit", "demo/database"])
@@ -36,76 +85,151 @@ class DigestTests(unittest.TestCase):
         self.assertEqual(self.repos[1]["stars"], 1200)
         self.assertEqual(self.repos[1]["stars_today"], 1)
         self.assertIsNone(self.repos[1]["forks"])
-        self.assertIsNone(self.repos[1]["language"])
         self.assertIsNone(parse_count("missing"))
 
-    def test_empty_or_blocked_page_fails(self):
-        for html in ("", "<html>Please sign in</html>", "<article class='Box-row'></article>"):
-            with self.subTest(html=html), self.assertRaises(ValueError):
-                parse_trending(html)
+    def test_repository_yaml_configuration_and_curated_notes_are_valid(self):
+        root = Path(__file__).resolve().parent.parent
+        config = load_config(root / "conf.yaml")
+        self.assertEqual(config["default_language"], "en")
+        self.assertEqual(config["languages"], ["en", "zh-CN"])
+        self.assertTrue(load_curated(root / config["summary"]["curated_file"], config["languages"]))
 
-    def test_timezone_and_language_url(self):
+    def test_empty_or_blocked_page_fails(self):
+        for page in ("", "<html>Please sign in</html>", "<article class='Box-row'></article>"):
+            with self.subTest(page=page), self.assertRaises(ValueError):
+                parse_trending(page)
+
+    def test_timezone_and_language_filter(self):
         self.assertEqual(self.snapshot["date"], "2026-10-29")
         self.assertIn(
             "/c%2B%2B?since=daily&spoken_language_code=zh",
-            trending_url({**CONFIG, "language": "c++", "spoken_language": "zh"}),
+            trending_url({**self.config, "programming_language": "c++", "spoken_language": "zh"}),
         )
 
-    def test_rank_changes_only_against_snapshot(self):
-        previous = {"repositories": [{"name": "demo/agent-kit", "rank": 3}]}
-        self.assertEqual(movement(self.repos[0], previous), "↑ 2")
-        self.assertEqual(movement(self.repos[1], previous), "新入当前采集榜单")
-        self.assertEqual(movement(self.repos[0], None), "首次采集，无可比快照")
+    def test_bilingual_reports_have_project_cards_without_leaderboard(self):
+        english = render_digest(self.snapshot)
+        chinese = render_digest(self.snapshot, "zh-CN")
+        self.assertTrue(english.startswith("# GitHub Tech Brief"))
+        self.assertTrue(chinese.startswith("# GitHub 技术快报"))
+        self.assertIn("What it does", english)
+        self.assertIn("这是做什么的", chinese)
+        self.assertIn("## [demo/agent-kit]", english)
+        self.assertNotIn("demo/database", english)
+        self.assertNotIn("| ---", english)
+        self.assertNotIn("完整榜单", chinese)
+        self.assertIn("2026-10-29.zh-CN.md", english)
+        self.assertIn("(2026-10-29.md)", chinese)
+        self.assertIn("(latest.zh-CN.md)", render_digest(self.snapshot, "en", "latest"))
 
-    def test_markdown_escaping_and_full_table(self):
-        digest = render_digest(self.snapshot, None)
-        self.assertIn("### 1.", digest)
-        self.assertNotIn("### 2.", digest)
-        self.assertIn("[demo/database]", digest)
-        snapshot = {**self.snapshot, "top_n": 2}
-        self.assertIn(r"pipes \| and \[links\]", render_digest(snapshot, None))
+    def test_extraction_uses_readme_not_trending_description(self):
+        summary = self.enriched[0]["summary"]
+        self.assertEqual(summary["status"], "extractive")
+        self.assertIn("offline document toolkit", summary["locales"]["en"]["purpose"])
+        self.assertNotIn("AI agent toolkit", summary["locales"]["en"]["purpose"])
+        self.assertIn("bilingual summary pending", render_digest(self.snapshot))
 
-    def test_readme_preserves_manual_content(self):
+    def test_cleaner_removes_code_hidden_text_and_scripts(self):
+        cleaned = clean_readme(README)
+        self.assertNotIn("do not execute", cleaned)
+        self.assertNotIn("hidden instructions", cleaned)
+        self.assertNotIn("script content", cleaned)
+        purpose, highlights = extract_passages(README, 3, 350)
+        self.assertIn("document toolkit", purpose)
+        self.assertEqual(len(highlights), 2)
+        self.assertFalse(any("installation" in text.lower() for text in [purpose, *highlights]))
+
+    def test_curated_summary_requires_matching_sha_and_both_locales(self):
+        path = self.root / "summaries.yaml"
+        path.write_text(
+            yaml.safe_dump({"schema_version": 1, "projects": {"demo/agent-kit": curated_entry()}}),
+            encoding="utf-8",
+        )
+        with patch("trending_digest.readmes.fetch_readme", side_effect=readme_result):
+            enriched = enrich_repositories(self.repos, self.root, self.config)
+        summary = enriched[0]["summary"]
+        self.assertEqual(summary["status"], "curated")
+        self.assertEqual(summary["locales"]["zh-CN"]["purpose"], "将本地文档建立索引以便搜索。")
+        changed = {**readme_result(), "sha": "b" * 40}
+        with patch("trending_digest.readmes.fetch_readme", return_value=changed):
+            self.assertEqual(
+                enrich_repositories(self.repos, self.root, self.config)[0]["summary"]["status"],
+                "extractive",
+            )
+        entry = curated_entry()
+        del entry["zh-CN"]
+        path.write_text(
+            yaml.safe_dump({"schema_version": 1, "projects": {"demo/agent-kit": entry}}),
+            encoding="utf-8",
+        )
+        with self.assertRaises(ValueError):
+            load_curated(path, ["en", "zh-CN"])
+
+    def test_missing_readme_does_not_invent_a_description(self):
+        missing = {"status": "missing", "url": self.repos[0]["url"] + "#readme"}
+        with patch("trending_digest.readmes.fetch_readme", return_value=missing):
+            result = enrich_repositories(self.repos, self.root, self.config)[0]
+        self.assertEqual(result["summary"]["status"], "unavailable")
+        self.assertEqual(result["summary"]["locales"]["en"]["purpose"], "")
+
+    def test_fetch_readme_decodes_actual_file_and_handles_404(self):
+        response = MagicMock()
+        response.__enter__.return_value.read.return_value = json.dumps(
+            {
+                "sha": SHA,
+                "html_url": "https://github.com/demo/repo/blob/main/README.rst",
+                "path": "README.rst",
+                "encoding": "base64",
+                "content": base64.b64encode(README.encode()).decode(),
+            }
+        ).encode()
+        with patch("trending_digest.readmes.urlopen", return_value=response):
+            result = fetch_readme(self.repos[0], 30)
+        self.assertEqual(result["text"], README)
+        error = HTTPError("https://api.github.com/", 404, "Missing", {}, None)
+        with patch("trending_digest.readmes.urlopen", side_effect=error):
+            self.assertEqual(fetch_readme(self.repos[0], 30)["status"], "missing")
+
+    def test_readme_manual_content_and_localized_preview(self):
         readme = "Intro\n<!-- digest:start -->\nold\n<!-- digest:end -->\nKeep me\n"
         updated = update_readme(readme, self.snapshot)
         self.assertTrue(updated.startswith("Intro\n"))
         self.assertTrue(updated.endswith("\nKeep me\n"))
         self.assertNotIn("\nold\n", updated)
         self.assertEqual(update_readme(updated, self.snapshot), updated)
+        self.assertIn("2026-10-29.zh-CN.md", update_readme(readme, self.snapshot, "zh-CN"))
         with self.assertRaises(ValueError):
             update_readme("No markers", self.snapshot)
 
-    def test_previous_snapshot_excludes_today_future_and_other_source(self):
-        with tempfile.TemporaryDirectory() as temp:
-            root = Path(temp)
-            directory = root / "data/2026/10"
-            directory.mkdir(parents=True)
-            for day in ("2026-10-25", "2026-10-27", "2026-10-28", "2026-10-29", "2026-10-30"):
-                source = "other" if day == "2026-10-28" else self.snapshot["source_url"]
-                (directory / f"{day}.json").write_text(
-                    json.dumps({"date": day, "source_url": source})
-                )
-            previous = previous_snapshot(root, "2026-10-29", self.snapshot["source_url"])
-            self.assertEqual(previous["date"], "2026-10-27")
+    def test_generation_writes_both_languages_reruns_and_preserves_on_failure(self):
+        for name in ("README.md", "README.zh-CN.md"):
+            (self.root / name).write_text("<!-- digest:start -->\n<!-- digest:end -->")
+        with patch("trending_digest.readmes.fetch_readme", side_effect=readme_result):
+            first = generate(self.root, self.root / "conf.yaml", PAGE)
+            generate(self.root, self.root / "conf.yaml", PAGE)
+        day = first["date"]
+        self.assertEqual(len(list((self.root / "data").rglob("*.json"))), 1)
+        self.assertTrue((self.root / "latest.zh-CN.md").exists())
+        self.assertIn(
+            f"{day}.zh-CN.md", (self.root / "daily/README.zh-CN.md").read_text(encoding="utf-8")
+        )
+        latest = (self.root / "latest.md").read_bytes()
+        with patch("trending_digest.cli.fetch_html", return_value="Access denied"):
+            with self.assertRaises(ValueError):
+                generate(self.root, self.root / "conf.yaml")
+        self.assertEqual((self.root / "latest.md").read_bytes(), latest)
+        (self.root / "README.zh-CN.md").write_text("Missing markers")
+        with patch("trending_digest.readmes.fetch_readme", side_effect=readme_result):
+            with self.assertRaises(ValueError):
+                generate(self.root, self.root / "conf.yaml", PAGE)
+        self.assertEqual((self.root / "latest.md").read_bytes(), latest)
 
-    def test_generation_rerun_and_failure_preserve_output(self):
-        with tempfile.TemporaryDirectory() as temp:
-            root = Path(temp)
-            (root / "README.md").write_text(
-                "<!-- digest:start -->\n<!-- digest:end -->", encoding="utf-8"
-            )
-            (root / "config.json").write_text(json.dumps(CONFIG))
-            first = generate(root, root / "config.json", FIXTURE)
-            second = generate(root, root / "config.json", FIXTURE)
-            self.assertEqual(first["date"], second["date"])
-            self.assertEqual(len(list((root / "data").rglob("*.json"))), 1)
-            latest = (root / "latest.md").read_bytes()
-            with patch("trending_digest.cli.fetch_html", return_value="Access denied"):
-                with self.assertRaises(ValueError):
-                    generate(root, root / "config.json")
-            self.assertEqual((root / "latest.md").read_bytes(), latest)
+    def test_archive_does_not_link_missing_language_files(self):
+        (self.root / "data/2026/10").mkdir(parents=True)
+        (self.root / "data/2026/10/2026-10-28.json").write_text("{}")
+        index = archive_index(self.root, "zh-CN", ["en", "zh-CN"], "en")
+        self.assertNotIn("2026-10-28", index)
 
-    def test_retry_transient_http_error(self):
+    def test_retry_transient_trending_error(self):
         error = HTTPError("https://github.com/trending", 503, "Unavailable", {}, None)
         with patch("trending_digest.core.urlopen", side_effect=[error, error, error]) as opened:
             with patch("trending_digest.core.time.sleep") as sleep:
@@ -114,13 +238,18 @@ class DigestTests(unittest.TestCase):
                 self.assertEqual(opened.call_count, 3)
                 self.assertEqual(sleep.call_count, 2)
 
-    def test_configuration_rejects_invalid_top_n(self):
-        with tempfile.TemporaryDirectory() as temp:
-            path = Path(temp) / "config.json"
-            for top_n in (0, 26, True, "10"):
-                path.write_text(json.dumps({**CONFIG, "top_n": top_n}))
-                with self.subTest(top_n=top_n), self.assertRaises(ValueError):
-                    load_config(path)
+    def test_yaml_config_rejects_invalid_values_and_unknown_keys(self):
+        for override in (
+            {"top_n": 0},
+            {"top_n": True},
+            {"languages": ["fr"]},
+            {"languages": ["en", "en"]},
+            {"unknown": 1},
+            {"summary": {"mode": "unimplemented"}},
+            {"readme": {"workers": 0}},
+        ):
+            with self.subTest(override=override), self.assertRaises(ValueError):
+                write_config(self.root, **override)
 
 
 if __name__ == "__main__":

@@ -1,53 +1,76 @@
-# GitHub 技术快报
+# GitHub Tech Brief
 
-每天从 [GitHub Trending 日榜](https://github.com/trending?since=daily) 收集热门开源项目，生成一份可追溯、可归档的技术阅读清单。
+[English](README.md) · [简体中文](README.zh-CN.md)
 
-无需大模型、付费服务或额外 API Key。Python 3.12+，使用 GitHub Actions 每天自动更新。
+A daily introduction to interesting open-source projects from [GitHub Trending](https://github.com/trending?since=daily). Each project gets a short explanation of **what it does** and **what stands out**, grounded in its actual README.
+
+English is the default. Every issue and archive has a Simplified Chinese counterpart. There is no full leaderboard or generic advice section.
 
 <!-- digest:start -->
 
-### 2026-10-29 · 最新一期
+### 2026-10-29 · Latest brief
 
-[阅读完整快报](daily/2026/10/2026-10-29.md) · [历史归档](daily/README.md)
+[Read this issue](daily/2026/10/2026-10-29.md) · [Previous issues](daily/README.md)
 
-| 排名 | 项目 | 今日新增 Star |
-| --- | --- | ---: |
-| 1 | [JetBrains/thinkrail](https://github.com/JetBrains/thinkrail) | +1,068 |
-| 2 | [elayadesign/ai-design-skills](https://github.com/elayadesign/ai-design-skills) | +2,139 |
-| 3 | [obra/superpowers](https://github.com/obra/superpowers) | +1,095 |
-| 4 | [HKUDS/DeepTutor](https://github.com/HKUDS/DeepTutor) | +2,371 |
-| 5 | [macro-inc/macro](https://github.com/macro-inc/macro) | +117 |
+- **[JetBrains/thinkrail](https://github.com/JetBrains/thinkrail)** — An agent-focused IDE built around the pi coding agent, combining code editing, isolated workspaces, and durable project knowledge.
+- **[elayadesign/ai-design-skills](https://github.com/elayadesign/ai-design-skills)** — A modular collection of design skills for AI coding tools that can read Markdown rules.
+- **[obra/superpowers](https://github.com/obra/superpowers)** — A composable skills framework that gives coding agents a software development process, from clarifying requirements to reviewing and finishing changes.
 
 <!-- digest:end -->
 
-## 每期有什么
+## Read the brief
 
-- 今日技术方向、主要语言和榜内日增 Star 最高项目。
-- 前 10 个项目的来源链接、原文说明、Star、Fork、排名变化和试用关注点。
-- 全部抓取项目的完整榜单，以及与此前最近一次同源快照的对比。
-- 日期归档、最新一期入口和结构化 JSON，便于二次使用。
+- [Latest issue in English](latest.md) · [中文快报](latest.zh-CN.md)
+- [Issue archive](daily/README.md) · [中文归档](daily/README.zh-CN.md)
 
-项目介绍保留原文，页面未提供的信息显示为缺失。技术分类来自关键词规则，试用关注点是通用建议；它们不是人工评测，也不是大模型生成的中文翻译。
+Project cards contain a concise purpose, up to three highlights, a link to the source README, and a small language / star line. All current Trending projects are covered by default, up to 25; `top_n` can reduce that number.
 
-## 本地运行
+## Run locally
 
-推荐使用 [uv](https://docs.astral.sh/uv/)：
+Requires Python 3.12+ and [uv](https://docs.astral.sh/uv/).
 
 ```sh
 uv sync --frozen
 uv run python -m trending_digest
 ```
 
-也可以使用普通 Python：
+Public READMEs can be fetched without a token. Set `GITHUB_TOKEN` to avoid the lower unauthenticated GitHub API limit. It is only sent to GitHub; no model API is called.
 
-```sh
-python -m venv .venv
-# 激活虚拟环境后：
-python -m pip install .
-python -m trending_digest
-```
+## Configuration
 
-开发检查：
+Edit [conf.yaml](conf.yaml). The previous `config.json` has been replaced.
+
+| Setting | Meaning |
+| --- | --- |
+| `default_language` | Default README / report filenames; currently `en` |
+| `languages` | Output languages, currently `en` and `zh-CN` |
+| `programming_language` | Trending programming-language filter; empty means all |
+| `spoken_language` | Trending description-language filter; empty means all |
+| `top_n` | Number of project cards, from 1 to 25 |
+| `timezone` | Issue date and capture timestamp timezone |
+| `readme` | Request timeout, fetch concurrency, and excerpt input limit |
+| `summary.mode` | `curated` to prefer saved bilingual summaries, or `extractive` for source excerpts |
+| `summary.curated_file` | Path to the versioned summary collection |
+| `summary.highlights` | Maximum highlights per project, from 1 to 5 |
+| `summary.fallback` | Currently `extractive`; new or changed sources get labelled excerpts |
+
+Changing the timezone does not change the workflow schedule.
+
+## How summaries work
+
+The current bilingual notes in [summaries.yaml](summaries.yaml) were written by Codex after reading the source READMEs. Each entry is tied to a README blob SHA. It is reused only while that source version still matches.
+
+For a new or changed README, the daily job extracts source passages and labels them **bilingual summary pending**. It preserves the original language instead of claiming an automatic translation. Missing READMEs are labelled explicitly. A failed Trending fetch stops publication and preserves the existing brief.
+
+No external model service or API key is configured. GitHub Actions does not have access to this Codex conversation. To refresh curated notes, ask Codex to read the current source README and update both languages and `readme_sha` in `summaries.yaml`; then regenerate. No unsupported model settings are included in the configuration.
+
+## Daily automation
+
+[Daily Trending Digest](.github/workflows/daily.yml) runs at **01:17 UTC / 09:17 Asia/Shanghai** and commits both languages, archives, and JSON snapshots. You can also use **Actions → Daily Trending Digest → Run workflow**. It uses the repository's built-in `GITHUB_TOKEN` and requires no model secrets.
+
+Scheduled runs can be delayed; see [GitHub's schedule documentation](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule). Forks must enable Actions. The workflow publishes only from the default branch.
+
+## Development
 
 ```sh
 uv run ruff check .
@@ -55,56 +78,18 @@ uv run ruff format --check .
 uv run python -m unittest discover -s tests -v
 ```
 
-## 自动更新
-
-`.github/workflows/daily.yml` 在每天 **北京时间 09:17（UTC 01:17）** 运行，并提交当天 Markdown、JSON、归档索引和 README 摘要。GitHub 的定时任务可能延迟，不保证准点执行。
-
-推送到自己的公开仓库后，在 **Actions → Daily Trending Digest → Run workflow** 可以立即生成一期。工作流仅需仓库自带的 `GITHUB_TOKEN`，已在 YAML 中声明 `contents: write`；无需添加个人 Token。如果仓库策略禁止写入，需要在仓库 Actions 设置中允许工作流写入。
-
-Fork 后需要在 Actions 页面启用工作流。公开仓库长期没有活动时，GitHub 可能停用定时任务；请查看 [官方调度说明](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule)。手动运行仅允许默认分支，避免从其他分支提交到 main。
-
-CI 在每次 push 和 pull request 时进行离线测试及代码检查。每日生成失败时工作流返回失败，不提交部分结果；可以从 Actions 日志排查并手动重跑。
-
-## 配置
-
-修改 `config.json`：
-
-```json
-{
-  "language": "",
-  "spoken_language": "",
-  "top_n": 10,
-  "timezone": "Asia/Shanghai"
-}
-```
-
-| 字段 | 说明 |
-| --- | --- |
-| `language` | 编程语言筛选，空字符串表示所有语言，例如 `python`、`rust`、`c++` |
-| `spoken_language` | 项目描述语言筛选，空字符串表示全部，例如 `zh`、`en` |
-| `top_n` | 展开解读的项目数量，1–25；完整榜单仍保存所有抓取结果 |
-| `timezone` | 快报日期和时间的时区；修改此值不会改变工作流的 cron 时间 |
-
-每次读取 GitHub 日榜当前页面。切换语言后，仅与相同来源 URL 的旧快照比较。GitHub 通常返回最多约 25 个项目，以实际页面为准。
-
-调试解析可以使用 `uv run python -m trending_digest --html path/to/trending.html`。该选项仍按当前时间生成文件，不能用于历史日期回填。对同一天重跑会替换当天快照，历史日期保留。
-
-## 文件布局
+For offline debugging, pass `--html path/to/trending.html --readme-dir path/to/readmes`. The README directory uses `owner/repo/README.md` plus `metadata.json` containing `sha`, `url`, and `path`. Offline generation still uses today's date.
 
 ```text
-latest.md                     最新完整快报
-daily/README.md               历史索引
-daily/YYYY/MM/YYYY-MM-DD.md    每日 Markdown
-data/YYYY/MM/YYYY-MM-DD.json   结构化数据、来源和采集时间
-trending_digest/              抓取、解析、渲染和命令行
-tests/                        离线页面样本和回归测试
-.github/workflows/            每日更新及 CI
+README.md / README.zh-CN.md       English and Chinese documentation
+latest.md / latest.zh-CN.md       Latest project briefs
+daily/YYYY/MM/                   Dated English / Chinese issues
+data/YYYY/MM/YYYY-MM-DD.json      Shared source metadata and bilingual summaries
+conf.yaml                        Public configuration
+summaries.yaml                   Versioned, curated project summaries
+trending_digest/                 Fetching, extraction, localization, and CLI
 ```
 
-JSON 中 `stars_today` 直接取自 Trending 页面的 `stars today`，不是采样间差值。所有排名按页面顺序保存。“新入榜”只表示相较上一次采集快照未出现，不代表项目首次登榜。缺失数字为 `null`，不会伪造为 0。
+## License
 
-## 参与贡献与许可证
-
-欢迎通过 Issue 或 Pull Request 改进解析、分类与快报格式。页面结构发生变化时，请附上最小 HTML 样本，并为解析行为增加离线测试。
-
-代码使用 [MIT License](LICENSE)。仓库中的第三方项目描述、商标和名称归原作者所有；项目说明与数据来源均链接至 GitHub。
+Code is [MIT licensed](LICENSE). Project names, trademarks, and third-party README content belong to their respective owners. Source links are included with each project.

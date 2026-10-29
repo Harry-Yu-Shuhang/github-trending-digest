@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-import json
 import re
 import time
 from datetime import datetime
-from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.parse import quote, urlencode
 from urllib.request import Request, urlopen
@@ -14,35 +12,14 @@ from zoneinfo import ZoneInfo
 
 from bs4 import BeautifulSoup
 
+from .config import load_config as load_config
+
 USER_AGENT = "github-trending-digest/0.1 (+https://github.com/trending)"
 NAME = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+")
 
 
-def load_config(path: Path) -> dict:
-    config = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(config, dict):
-        raise ValueError("config.json must be an object")
-    allowed = {"language", "spoken_language", "top_n", "timezone"}
-    if config.keys() - allowed:
-        raise ValueError(f"Unknown configuration keys: {config.keys() - allowed}")
-    config = {
-        "language": "",
-        "spoken_language": "",
-        "top_n": 10,
-        "timezone": "Asia/Shanghai",
-        **config,
-    }
-    if type(config["top_n"]) is not int or not 1 <= config["top_n"] <= 25:
-        raise ValueError("top_n must be an integer between 1 and 25")
-    for key in ("language", "spoken_language", "timezone"):
-        if not isinstance(config[key], str):
-            raise ValueError(f"{key} must be a string")
-    ZoneInfo(config["timezone"])
-    return config
-
-
 def trending_url(config: dict) -> str:
-    language = quote(config["language"].strip().lower(), safe="")
+    language = quote(config["programming_language"].strip().lower(), safe="")
     query = {"since": "daily"}
     if config["spoken_language"]:
         query["spoken_language_code"] = config["spoken_language"]
@@ -124,24 +101,16 @@ def parse_trending(html: str) -> list[dict]:
     return repositories
 
 
-def previous_snapshot(root: Path, day: str, source_url: str) -> dict | None:
-    for path in sorted((root / "data").glob("????/??/????-??-??.json"), reverse=True):
-        if path.stem >= day:
-            continue
-        snapshot = json.loads(path.read_text(encoding="utf-8"))
-        if snapshot["source_url"] == source_url:
-            return snapshot
-    return None
-
-
 def make_snapshot(repositories: list[dict], config: dict, now: datetime) -> dict:
     local = now.astimezone(ZoneInfo(config["timezone"]))
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "date": local.date().isoformat(),
         "fetched_at": local.isoformat(timespec="seconds"),
         "timezone": config["timezone"],
         "source_url": trending_url(config),
         "top_n": config["top_n"],
+        "default_language": config["default_language"],
+        "languages": config["languages"],
         "repositories": repositories,
     }
