@@ -1,18 +1,10 @@
 # Configuration for the local UI and report generator.
 # active_language options: en (English), zh-CN (简体中文). Controls the GUI and report language.
-active_language: en
+active_language: zh-CN
 programming_language: ''
 spoken_language: ''
 top_n: 25
 timezone: Asia/Shanghai
-# Enable to filter by literal keywords in names, descriptions, languages and READMEs.
-# The description records your goal; keywords perform matching (no model API).
-work_requirements:
-  enabled: false
-  description: ''
-  keywords: []
-  exclude_keywords: []
-  min_matches: 1
 readme:
   max_chars: 24000
   timeout_seconds: 30
@@ -22,3 +14,14 @@ summary:
   curated_file: summaries.yaml
   fallback: extractive
   highlights: 3
+work_requirements:
+  description: 我是个游戏客户端性能方向的测试开发工程师
+llm:
+  base_url: http://127.0.0.1:11434/v1
+  model: qwen3:8b
+  api_key: ''
+  api_key_env: ''
+  timeout_seconds: 600
+  batch_size: 1
+  readme_max_chars: 4000
+  response_format: json_object

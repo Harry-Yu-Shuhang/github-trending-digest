@@ -10,11 +10,11 @@
 
 ### 2026-10-29 · 最新一期
 
-[阅读本期](../output/daily/2026/10/2026-10-29.zh-CN.md) · [历史快报](../output/daily/README.zh-CN.md)
+[阅读本期](../output/daily/2026/10/2026-10-29.zh-CN.md) · [历史快报](../output/daily/README.md)
 
-- **[JetBrains/thinkrail](https://github.com/JetBrains/thinkrail)** — 围绕 pi 编程智能体构建的 IDE，把代码编辑、隔离工作区和持久化项目知识放进同一个界面。
-- **[elayadesign/ai-design-skills](https://github.com/elayadesign/ai-design-skills)** — 面向 AI 编程工具的模块化设计技能集合，适用于能够读取 Markdown 规则的智能体。
 - **[obra/superpowers](https://github.com/obra/superpowers)** — 通过可组合技能，为编程智能体提供从澄清需求到审查和交付变更的软件开发流程。
+- **[HKUDS/DeepTutor](https://github.com/HKUDS/DeepTutor)** — 以智能体为核心的学习工作区，把个性化辅导、解题、测验、研究和学习练习连接起来。
+- **[pbakaus/impeccable](https://github.com/pbakaus/impeccable)** — 为编程智能体提供设计词汇和审查工具，通过明确的视觉指令改进已有界面。
 
 <!-- digest:end -->
 
@@ -36,10 +36,14 @@ HTML 阅读版包含跳转目录、全文搜索、编程语言筛选、深色模
 
 启动脚本会在需要时安装 uv，准备 Python 3.12 和可选的界面依赖，并在浏览器打开 `http://127.0.0.1:7860`。首次运行需要联网。关闭终端或按 Ctrl+C 可以停止服务。若下载 ZIP 后 macOS 丢失可执行权限，可直接使用 `sh start.command`。
 
-响应式表单可以编辑 `conf.yaml` 的全部设置。切换语言会立即翻译界面，并保留尚未保存的输入。“保存配置”会验证并保存设置；“抓取并生成报告”会保存表单后重新抓取 Trending 和 README；“用已保存数据生成”会保存表单并使用最近一次采集数据，不发起新的网络请求，来源筛选和采集时间仍沿用原数据。生成后可以在界面中预览并下载 HTML 报告。
+主界面只保留语言、工作描述，以及“保存配置”“加载配置”“生成报告”三个按钮。保存、加载时才展开名称或列表；其他参数留在 YAML 中并完整保留。生成成功后在默认浏览器打开 HTML。最后一个工作台标签页关闭后，后端等待 8 秒自动退出；刷新页面或仍有其他工作台标签页时保持运行。可用 `--keep-alive` 让服务独立于浏览器运行。
 
 默认从 7860 开始寻找可用端口；被占用时自动尝试 7861、7862 等，并打开实际选中的地址。
 `--port` 用于指定固定端口；环境变量 `GRADIO_SERVER_PORT` 可修改自动选择的起始端口。
+
+生成时立即显示居中的加载弹窗，避免重复提交；保存、加载和生成操作完成后统一显示成功或错误弹窗。
+错误不会清空已填写的描述，关闭提示后可修改配置并重试。完成后的弹窗支持键盘确认和 Escape 关闭；
+加载弹窗会保持到操作完成。
 
 指定其他端口，或不自动打开浏览器：
 
@@ -58,7 +62,7 @@ uv sync --project app --frozen
 uv run --project app python -m trending_digest
 ```
 
-读取公开 README 不强制要求 Token。可通过环境变量 `GITHUB_TOKEN` 提高 GitHub API 限额；界面启动时也会在可用时复用已有 GitHub CLI 登录。凭据仅在进程内存中使用，只发往 GitHub，不写入配置，也不调用模型服务。
+读取公开 README 不强制要求 Token。可通过环境变量 `GITHUB_TOKEN` 提高 GitHub API 限额；界面启动时也会在可用时复用已有 GitHub CLI 登录。GitHub 凭据只发往 GitHub；模型接口使用下面单独配置的密钥。
 
 ## 配置
 
@@ -72,55 +76,66 @@ uv run --project app python -m trending_digest
 | `top_n` | 每期介绍的项目数量，1–25 |
 | `timezone` | 快报日期与采集时间的时区 |
 | `readme` | 请求超时、抓取并发数和摘录输入长度 |
-| `summary.mode` | `curated` 优先使用已整理的双语摘要；`extractive` 只摘录原文 |
-| `summary.curated_file` | 保存有版本绑定的项目摘要文件 |
 | `summary.highlights` | 每个项目最多展示几条亮点，1–5 |
-| `summary.fallback` | 当前为 `extractive`；新增或有变化的 README 使用带标记的原文摘录 |
 
 修改时区不会改变工作流的执行时间。旧的 `default_language` 配置会在读取时迁移，保存后只保留 `active_language`。
 
-## 按工作需求筛选与命名配置
+## 配置同一个大模型
 
-在 `conf.yaml` 中填写 `work_requirements`，GUI 会读取并提供 YAML 编辑框：
+默认连接本机 Ollama。先启动 Ollama，运行 `ollama list`，将已安装模型的完整名称
+（包括标签）填入 `conf.yaml` 的 `llm.model`：
 
 ```yaml
+llm:
+  base_url: http://127.0.0.1:11434/v1
+  model: ""                       # `ollama list` 显示的完整模型名称
+  api_key: ""                     # 本地 Ollama 不需要密钥
+  api_key_env: ""
+  timeout_seconds: 600
+  batch_size: 1
+  readme_max_chars: 4000
+  response_format: json_object    # 支持时可用 json_schema，不支持 JSON 模式则填 text
 work_requirements:
-  enabled: true
-  description: "寻找适用于 Unreal Engine 性能分析与自动化的工具"
-  keywords: ["Unreal", "profiling", "performance", "性能分析"]
-  exclude_keywords: ["cloud only"]
-  min_matches: 1
+  description: ""
 ```
 
-`description` 用来记录工作目标，实际按关键词匹配，不调用模型进行语义分析。
-匹配范围包括仓库名称、介绍、编程语言、README 文本（受 `readme.max_chars` 限制）和已有摘要。
-忽略大小写；英文单词按边界匹配，中文按子串匹配，中英文同义词请分别填写。
-至少命中 `min_matches` 个不同关键词，命中任一排除词则排除。
-启用筛选后，新抓取会读取全部 Trending 候选仓库的 README，再按 `top_n` 截取匹配结果，
-保留原榜单顺序。HTML 和 Markdown 报告会展示匹配词；没有匹配结果时会明确提示。
-设为 `enabled: false` 可恢复完整快报。
+已安装但未启动时，打开 Ollama 桌面应用或运行 `ollama serve`。
+尚未安装模型时，先通过 `ollama pull <模型名:标签>` 下载自己选择的模型；
+本程序不会自动下载模型。筛选与介绍通过 [Ollama 兼容接口](https://docs.ollama.com/api/openai-compatibility)
+调用同一个本地模型。两个密钥字段均留空即可，不会读取其他云端密钥环境变量。
+默认每次处理一个仓库，并延长超时，适应模型首次加载和 CPU 推理。
+如果增加 `readme_max_chars` 或 `batch_size`，也应通过
+[Ollama 上下文设置](https://docs.ollama.com/faq#how-can-i-specify-the-context-window-size)
+增加模型的上下文长度。
 
-“用已保存数据生成”可以离线重新应用工作需求筛选。快照保留全部候选仓库，便于反复切换需求；
-只能匹配已保存的文本，旧快照可能缺少部分仓库的 README，重新抓取可获得更完整的匹配依据。
-来源的编程语言和描述语言筛选仍需重新抓取才会生效。
+仍可切换到其他 Chat Completions 兼容服务，修改 `base_url` 和 `model` 即可。
+需要认证时，设置 `api_key_env: LLM_API_KEY` 并定义该环境变量，或填写 `api_key`；
+指定的环境变量优先。不要把真实密钥提交到受版本管理的 `conf.yaml`。
 
-GUI 中填写“配置名称”，点击“保存命名配置”，会把完整表单（含工作需求）保存到
-`configs/<名称>.yaml`，同时更新 `conf.yaml`。选择已保存的配置后点击“加载配置”，即可填充表单，
-再点击保存或生成后应用。同名保存会覆盖原命名配置；名称支持中文、字母、数字、空格、下划线
-和连字符，长度为 1–80 个字符。重启后仍可加载。命令行也可用 `--config configs/<名称>.yaml`
-直接指定一套配置。
+## 大模型介绍与工作相关性
 
-## 摘要如何生成
+同一个模型在同次请求中，根据 README 生成仓库介绍、亮点，并结合工作描述判断相关性。
+它会考虑直接适用的工具、可迁移的通用能力，以及具体工作中的使用方式，
+不要求仓库出现某个固定关键词。报告展示模型评分、适用理由和使用建议；
+按评分排序后再按 `top_n` 截取，同分保留 Trending 顺序。
+评分是模型判断，不代表已经实测兼容。
 
-[summaries.yaml](../summaries.yaml) 中的本期双语内容，由 Codex 阅读项目 README 后整理。每项摘要都绑定原始 README 的 blob SHA，仅在源版本相同时复用。
+工作描述留空自动关闭筛选，但仓库介绍仍调用模型。请求按批次发送，并校验返回的仓库 ID、
+分数、理由和摘要。README 缺失时标为不可用，不编造介绍。
+接口失败、拒绝或返回不完整时会提示错误，保留原报告，不会偷偷退回关键词筛选。
+工作描述和 README 摘录会发送到配置的模型服务；报告快照不保存密钥或整份配置。
 
-对新增或 README 已变化的项目，每日任务摘录来源段落并标明**当前语言摘要待补充**，保留原文语言，不冒充自动翻译。README 无法读取时明确标记。Trending 抓取失败时停止发布，保留已有快报。
-
-当前不配置外部模型服务或 API Key，GitHub Actions 也不能直接访问本次 Codex 对话。需要刷新摘要时，可让 Codex 阅读当前 README，同时更新 `summaries.yaml` 中的中英文内容和 `readme_sha`，然后重新生成。配置文件中没有尚未实现的模型参数。
+点击“保存配置”可保存当前配置，也可命名保存到 `configs/<名称>.yaml`；
+点击“加载配置”选择 `conf.yaml` 或命名配置。语言、抓取参数和模型设置等隐藏参数会完整保留。
+旧命名配置没有 `llm` 时沿用当前模型配置。命令行也可用 `--config configs/<名称>.yaml`。
 
 ## 每日自动更新
 
-[每日工作流](../.github/workflows/daily.yml) 计划在**北京时间 09:17 / UTC 01:17** 执行，仅提交根目录英文 README 或中文文档中的快报预览更新；`output/` 和旧的根目录 `data/` 已被 Git 忽略，不再提交报告、归档和 JSON 快照。也可以在 **Actions → Daily Trending Digest → Run workflow** 手动运行。仅使用仓库自带的 `GITHUB_TOKEN`，无需模型密钥。云端运行使用仓库里已提交的 `conf.yaml`；本地界面保存配置不会自动推送 Git 变更。
+GitHub 托管运行器无法访问你电脑上的 Ollama。默认本机地址或模型名称为空时，
+云端工作流会跳过生成和发布。需要云端生成时，配置运行器可访问的接口和模型，
+如需认证再启用密钥环境变量。本地 Ollama 仍可通过 GUI 或命令行生成报告。
+
+[每日工作流](../.github/workflows/daily.yml) 计划在**北京时间 09:17 / UTC 01:17** 执行，仅提交根目录英文 README 或中文文档中的快报预览更新；`output/` 和旧的根目录 `data/` 已被 Git 忽略，不再提交报告、归档和 JSON 快照。也可以在 **Actions → Daily Trending Digest → Run workflow** 手动运行。抓取使用仓库自带的 `GITHUB_TOKEN`；启用定时生成前需配置模型 ID、接口地址和仓库 Secret `LLM_API_KEY`。云端运行使用仓库里已提交的 `conf.yaml`；本地界面保存配置不会自动推送 Git 变更。
 
 定时任务可能延迟，参见 [GitHub 调度说明](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule)。Fork 后需要启用 Actions，发布任务仅允许默认分支运行。
 

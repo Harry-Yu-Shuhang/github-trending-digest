@@ -1,129 +1,155 @@
 from __future__ import annotations
 
+import copy
 import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from bs4 import BeautifulSoup
+from model_fixtures import fake_analysis
 
 from trending_digest.cli import generate
 from trending_digest.config import validate_config
-from trending_digest.matching import match_repository, selected_repositories
+from trending_digest.matching import apply_requirements, selected_repositories
 from trending_digest.service import run_generation, save_configuration
 
-PAGE = Path(__file__).parent / "fixtures/trending.html"
+
+def repository(name, description):
+    return {
+        "name": name,
+        "description": description,
+        "url": "https://github.com/" + name,
+        "language": "C++",
+        "stars": 100,
+        "stars_today": 5,
+        "readme": {
+            "excerpt": description,
+            "url": "https://github.com/" + name + "#readme",
+            "sha": "a" * 40,
+            "status": "ok",
+        },
+    }
 
 
-class WorkRequirementTests(unittest.TestCase):
-    def test_invalid_rules_are_rejected_and_keywords_are_deduplicated(self):
-        for rules in (
-            {"enabled": "true"},
-            {"description": []},
-            {"keywords": "Python"},
-            {"keywords": [""]},
-            {"exclude_keywords": [None]},
-            {"min_matches": True},
-            {"enabled": True},
-            {"enabled": True, "keywords": ["AI", "ai"], "min_matches": 2},
-            {"unknown": 1},
-        ):
-            with self.subTest(rules=rules), self.assertRaises(ValueError):
-                validate_config({"work_requirements": rules})
-        config = validate_config({"work_requirements": {"keywords": [" Python ", "python"]}})
-        self.assertEqual(config["work_requirements"]["keywords"], ["Python"])
-
-    def test_case_boundaries_chinese_and_exclusions(self):
-        rules = validate_config(
+class ModelMatchingTests(unittest.TestCase):
+    def config(self, description=""):
+        return validate_config(
             {
-                "work_requirements": {
-                    "enabled": True,
-                    "keywords": ["AI", "C++", "性能分析"],
-                    "exclude_keywords": ["cloud only"],
-                    "min_matches": 2,
-                }
+                "llm": {"model": "test-model", "batch_size": 1},
+                "work_requirements": {"description": description},
             }
-        )["work_requirements"]
-        repo = {"name": "demo/rail", "description": "C++ 性能分析工具"}
-        result = match_repository(repo, rules)
-        self.assertTrue(result["useful"])
-        self.assertEqual(result["matched_keywords"], ["C++", "性能分析"])
-        repo["description"] += " — CLOUD ONLY"
-        self.assertFalse(match_repository(repo, rules)["useful"])
-        self.assertEqual(match_repository(repo, rules)["excluded_keywords"], ["cloud only"])
+        )
 
-    def test_fresh_and_cached_filters_keep_all_candidates_and_apply_top_n_after_matching(self):
+    def test_model_scores_drive_selection_and_summaries_without_literal_overlap(self):
+        config = self.config("游戏客户端性能测试")
+        repos = [
+            repository("example/unrelated", "A learning assistant with test instructions"),
+            repository("example/generic-trace", "A system timeline explorer"),
+            repository("example/game-profiler", "A graphics analysis tool"),
+        ]
+        responses = [
+            {
+                "id": repo["name"],
+                "purpose": "模型生成的仓库介绍",
+                "highlights": ["来自 README 的亮点"],
+                "score": score,
+                "reason": "根据工作任务判断相关性",
+                "use_case": "分析客户端帧时间回归",
+            }
+            for repo, score in zip(repos, [10, 60, 90], strict=True)
+        ]
+        snapshot = {"repositories": repos, "top_n": 2}
+        with patch(
+            "trending_digest.llm.request_analysis",
+            side_effect=[{"results": [item]} for item in responses],
+        ) as model:
+            apply_requirements(snapshot, config)
+        self.assertEqual(model.call_count, 3)
+        self.assertEqual(
+            [repo["name"] for repo in selected_repositories(snapshot)],
+            ["example/game-profiler", "example/generic-trace"],
+        )
+        self.assertTrue(
+            all(repo["summary"]["status"] == "model" for repo in snapshot["repositories"])
+        )
+        self.assertTrue(
+            all(
+                repo["summary"]["model"] == repo["work_match"]["model"] == "test-model"
+                for repo in snapshot["repositories"]
+            )
+        )
+
+    def test_empty_description_still_calls_model_for_introductions_and_disables_filter(self):
+        config = self.config()
+        snapshot = {
+            "repositories": [repository("example/search", "Local document search")],
+            "top_n": 25,
+        }
+        with patch("trending_digest.llm.request_analysis", side_effect=fake_analysis) as model:
+            apply_requirements(snapshot, config)
+        model.assert_called_once()
+        self.assertEqual(len(selected_repositories(snapshot)), 1)
+        self.assertNotIn("work_match", snapshot["repositories"][0])
+        self.assertIn(
+            "Model introduction", snapshot["repositories"][0]["summary"]["locales"]["en"]["purpose"]
+        )
+
+    def test_failed_batch_never_mutates_snapshot_or_falls_back_to_keywords(self):
+        config = self.config("performance")
+        snapshot = {
+            "repositories": [
+                repository("example/first", "performance profiler"),
+                repository("example/second", "performance profiler"),
+            ],
+            "top_n": 25,
+        }
+        before = copy.deepcopy(snapshot)
+        first = fake_analysis(snapshot["repositories"][:1], config)
+        with patch("trending_digest.llm.request_analysis", side_effect=[first, {"results": []}]):
+            with self.assertRaisesRegex(ValueError, "omitted"):
+                apply_requirements(snapshot, config)
+        self.assertEqual(snapshot, before)
+
+    def test_cached_generation_reanalyzes_with_the_configured_model(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             (root / "docs").mkdir()
             for name in ("README.md", "docs/README.zh-CN.md"):
                 (root / name).write_text("<!-- digest:start -->\n<!-- digest:end -->")
-            config = validate_config(
-                {
-                    "top_n": 1,
-                    "summary": {"mode": "extractive"},
-                    "work_requirements": {
-                        "enabled": True,
-                        "description": "Find <offline> tools for my work",
-                        "keywords": ["needleword"],
-                    },
-                }
-            )
+            config = self.config()
             save_configuration(root, config)
-
-            def readme(repo, timeout):
-                term = "haystackword" if repo["name"].endswith("agent-kit") else "needleword"
-                return {
-                    "status": "ok",
-                    "sha": "a" * 40,
-                    "url": repo["url"] + "#readme",
-                    # The keyword is outside the 350-character summary excerpt.
-                    "text": "# Tool\n\n"
-                    + "A local development toolkit with useful features. " * 20
-                    + "\n\n"
-                    + term,
-                }
-
-            with patch("trending_digest.readmes.fetch_readme", side_effect=readme) as fetch:
-                snapshot = generate(root, root / "conf.yaml", PAGE)
-            self.assertEqual(fetch.call_count, 2)
-            self.assertEqual(len(snapshot["repositories"]), 2)
-            self.assertEqual(selected_repositories(snapshot)[0]["name"], "demo/database")
-            page = BeautifulSoup(
-                (root / "output/reports/index.html").read_text("utf-8"), "html.parser"
-            )
-            self.assertEqual(len(page.select("article.project")), 1)
-            self.assertIn("needleword", page.select_one(".work-match").get_text())
-            self.assertIsNone(page.select_one("offline"))
-            self.assertIn("<offline>", page.select_one(".work-requirements").get_text())
-            self.assertIn("demo/database", (root / "output/latest.md").read_text("utf-8"))
-            self.assertNotIn("demo/agent-kit", (root / "README.md").read_text("utf-8"))
-
-            # A different requirement can recover a previously unselected candidate offline.
-            config["work_requirements"]["keywords"] = ["haystackword"]
-            with patch(
-                "trending_digest.readmes.fetch_readme", side_effect=AssertionError("network")
+            page = Path(__file__).parent / "fixtures/trending.html"
+            readme = {
+                "status": "ok",
+                "sha": "a" * 40,
+                "url": "https://github.com/demo/agent-kit#readme",
+                "text": "A source README documenting the actual capabilities of this toolkit.",
+            }
+            with (
+                patch("trending_digest.readmes.fetch_readme", side_effect=lambda *_: dict(readme)),
+                patch(
+                    "trending_digest.llm.request_analysis",
+                    side_effect=fake_analysis,
+                ),
             ):
-                cached = run_generation(root, config, cached=True)
-            self.assertEqual(selected_repositories(cached)[0]["name"], "demo/agent-kit")
-            config["work_requirements"]["keywords"] = ["needleword"]
-            cached = run_generation(root, config, cached=True)
-            self.assertEqual(selected_repositories(cached)[0]["name"], "demo/database")
+                generate(root, root / "conf.yaml", page)
+            before = (root / "output/latest.md").read_bytes()
+            config["work_requirements"]["description"] = "游戏性能测试"
+            with patch(
+                "trending_digest.llm.request_analysis", side_effect=ValueError("model failed")
+            ):
+                with self.assertRaisesRegex(ValueError, "model failed"):
+                    run_generation(root, config, cached=True)
+            self.assertEqual((root / "output/latest.md").read_bytes(), before)
 
-            config["work_requirements"]["exclude_keywords"] = ["needleword"]
-            cached = run_generation(root, config, cached=True)
-            self.assertEqual(selected_repositories(cached), [])
-            self.assertIn("No repositories matched", (root / "output/latest.md").read_text("utf-8"))
-            page = BeautifulSoup(
-                (root / "output/reports/index.html").read_text("utf-8"), "html.parser"
-            )
-            self.assertEqual(len(page.select("article.project")), 0)
-            self.assertIn("No repositories matched", page.get_text())
-
-            config["work_requirements"]["enabled"] = False
-            cached = run_generation(root, config, cached=True)
-            self.assertEqual(selected_repositories(cached)[0]["name"], "demo/agent-kit")
-            self.assertTrue(all("work_match" not in repo for repo in cached["repositories"]))
+    def test_unconfigured_model_fails_before_fetching(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            save_configuration(root, {})
+            with patch("trending_digest.cli.fetch_html") as fetch:
+                with self.assertRaisesRegex(ValueError, "llm.model"):
+                    generate(root, root / "conf.yaml")
+            fetch.assert_not_called()
 
 
 if __name__ == "__main__":

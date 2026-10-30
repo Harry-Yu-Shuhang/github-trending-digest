@@ -28,11 +28,39 @@ jobs:
           enable-cache: true
           cache-dependency-glob: app/uv.lock
       - run: uv sync --project app --frozen --no-dev --python 3.12
+      - name: Check cloud model configuration
+        id: model
+        run: |
+          uv run --project app --no-dev python - <<'PY'
+          import ipaddress
+          import os
+          from pathlib import Path
+          from urllib.parse import urlsplit
+          from trending_digest.config import load_config
+
+          settings = load_config(Path("conf.yaml"))["llm"]
+          host = urlsplit(settings["base_url"]).hostname
+          local = host == "localhost"
+          try:
+              address = ipaddress.ip_address(host)
+              local = local or address.is_loopback or address.is_unspecified
+          except ValueError:
+              pass
+          enabled = bool(settings["model"].strip()) and not local
+          with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+              output.write(f"enabled={str(enabled).lower()}\n")
+          if not enabled:
+              print("::notice::Skipping: configure a model reachable from this runner. "
+                    "GitHub-hosted runners cannot access your local Ollama server.")
+          PY
       - name: Generate digest
+        if: steps.model.outputs.enabled == 'true'
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
         run: uv run --project app --no-dev python -m trending_digest
       - name: Commit and push
+        if: steps.model.outputs.enabled == 'true'
         shell: bash
         run: |
           set -euo pipefail

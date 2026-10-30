@@ -20,7 +20,8 @@ from .core import (
     trending_url,
 )
 from .html_report import html_outputs
-from .matching import selected_repositories
+from .llm import ensure_model_configured
+from .matching import apply_requirements, selected_repositories
 from .readmes import enrich_repositories
 from .render import archive_index, render_digest, report_path, update_readme
 
@@ -46,9 +47,11 @@ def generate(
     root: Path, config_path: Path, html_path: Path | None = None, readme_dir: Path | None = None
 ) -> dict:
     config = load_config(config_path)
+    ensure_model_configured(config)
     html = html_path.read_text(encoding="utf-8") if html_path else fetch_html(trending_url(config))
     repositories = enrich_repositories(parse_trending(html), root, config, readme_dir)
     snapshot = make_snapshot(repositories, config, datetime.now().astimezone())
+    apply_requirements(snapshot, config)
     publish_snapshot(root, snapshot)
     return snapshot
 

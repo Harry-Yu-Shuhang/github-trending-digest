@@ -1,39 +1,40 @@
 :root { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif; }
-.gradio-container { max-width: 1440px !important; margin: 0 auto !important; padding: clamp(14px, 1.7vw, 24px) clamp(12px, 2.5vw, 36px) 32px !important; }
+.gradio-container { max-width: 980px !important; margin: auto !important; padding: 28px 28px 48px !important; }
 .gradio-container .main { padding: 0 !important; max-width: 100% !important; }
-.desk-hero { padding: 16px 0 30px; }
-#workspace-header { gap: 24px; align-items: flex-start; }
-#workspace-language { padding-top: 20px; min-width: min(180px, 100%) !important; }
-.desk-kicker { font-size: 11px; letter-spacing: 2px; color: #217053; font-weight: 650; }
-.desk-hero h1 { font-size: clamp(25px, 3vw, 42px); line-height: 1.28; letter-spacing: -1px; margin: 12px 0 12px; color: var(--body-text-color); }
-.desk-hero p { max-width: 780px; font-size: 15px; line-height: 1.8; color: var(--body-text-color-subdued); }
-#settings-layout { gap: 24px; align-items: stretch; }
-#discovery-panel, #summary-panel { padding: 22px; border: 1px solid var(--border-color-primary); border-radius: 12px; background: var(--block-background-fill); min-width: min(260px, 100%) !important; }
-#settings-layout h3 { margin-top: 0; margin-bottom: 12px; }
-#settings-hint { font-size: 12px; line-height: 1.8; margin-top: 6px; color: var(--body-text-color-subdued); }
-#action-row { margin-top: 12px; gap: 12px; }
-#action-row button { min-height: 48px; line-height: 1.5; white-space: normal; }
-#operation-status { padding: 12px 16px; border-radius: 8px; background: var(--block-background-fill); border: 1px solid var(--border-color-primary); line-height: 1.7; overflow-wrap: anywhere; }
-#report-preview { width: 100%; padding: 0; }
-.report-frame { width: 100%; height: 900px; display: block; border: 1px solid var(--border-color-primary); border-radius: 10px; background: #f5f6f2; }
-.preview-empty { text-align: center; border: 1px dashed var(--border-color-primary); border-radius: 10px; padding: 80px 20px; font-size: 14px; color: var(--body-text-color-subdued); }
-#settings-layout input, #settings-layout textarea, #settings-layout select { box-sizing: border-box; max-width: 100%; }
-@media (max-width: 900px) {
-  .gradio-container { padding: 20px !important; }
-  #settings-layout { gap: 16px; }
-  #discovery-panel, #summary-panel { padding: 18px; }
-  .report-frame { height: 720px; }
-}
+#workspace-header { align-items: center; gap: 32px; margin-bottom: 14px; }
+.desk-hero { padding: 8px 0; }
+.desk-kicker { font-size: 10px; letter-spacing: 2px; color: #217053; font-weight: 650; }
+.desk-hero h1 { font-size: clamp(24px, 3vw, 32px); line-height: 1.3; margin: 9px 0; letter-spacing: -.6px; }
+.desk-hero p { font-size: 14px; line-height: 1.65; margin: 0; color: var(--body-text-color-subdued); }
+#main-settings { padding: 24px; border: 1px solid var(--border-color-primary); border-radius: 14px; background: var(--block-background-fill); gap: 16px; }
+#main-settings .block { padding: 0 !important; }
+.gradio-container [data-testid="block-info"] { background: transparent !important; color: var(--body-text-color) !important; padding: 0 !important; font-weight: 600; }
+#work-requirements textarea { border: 1px solid #a9b7ae !important; border-radius: 8px; padding: 12px; box-shadow: none; }
+#work-requirements textarea:focus { outline: 2px solid #217053; outline-offset: 1px; }
+#action-row { align-items: stretch; gap: 12px; }
+#action-row button { min-height: 46px; }
+#save-config-panel, #load-config-panel { padding: 16px; border: 1px solid var(--border-color-primary); border-radius: 8px; }
+#generate-report { min-height: 48px; margin-bottom: 0; font-size: 16px; font-weight: 650; }
+#operation-status { min-height: 24px; font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; }
+#operation-status p { margin: 0; }
+.gradio-container input, .gradio-container textarea { box-sizing: border-box; max-width: 100%; }
+#operation-feedback { min-height: 0 !important; height: 0; padding: 0 !important; border: 0 !important; }
+.feedback-dialog { position: fixed; inset: 50% auto auto 50%; transform: translate(-50%, -50%); width: min(460px, calc(100vw - 32px)); max-height: calc(100dvh - 40px); margin: 0; padding: 0; border: 1px solid var(--border-color-primary); border-radius: 16px; color: var(--body-text-color); background: var(--block-background-fill); box-shadow: 0 24px 80px #0003; }
+.feedback-dialog:focus { outline: none; }
+.feedback-dialog::backdrop { background: #14251f66; backdrop-filter: blur(3px); }
+.feedback-card { padding: 30px; text-align: center; }
+.feedback-icon { display: grid; place-items: center; width: 48px; height: 48px; margin: 0 auto 18px; border-radius: 50%; color: #196247; background: #e6f4ec; font-size: 28px; font-weight: 650; }
+.feedback-dialog[data-kind="error"] .feedback-icon { color: #a82b2b; background: #fcebec; }
+.feedback-dialog[data-kind="loading"] .feedback-icon { width: 38px; height: 38px; margin-bottom: 28px; border: 3px solid #dce8e1; border-top-color: #217053; background: transparent; animation: feedback-spin 0.85s linear infinite; }
+.feedback-dialog h2 { margin: 0 0 12px; font-size: 21px; line-height: 1.4; }
+.feedback-dialog p { margin: 0; max-height: 40dvh; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14px; line-height: 1.8; color: var(--body-text-color-subdued); }
+.feedback-dismiss { width: 100%; margin-top: 24px; padding: 11px 16px; border: 0; border-radius: 8px; color: #fff; background: #217053; font-family: inherit; font-size: 14px; font-weight: 600; line-height: 1.5; cursor: pointer; }
+.feedback-dismiss:focus-visible { outline: 3px solid #70b591; outline-offset: 3px; }
+@keyframes feedback-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .feedback-dialog[data-kind="loading"] .feedback-icon { animation-duration: 2s; } }
 @media (max-width: 600px) {
-  .gradio-container { padding: 14px 12px 28px !important; }
-  .desk-hero { padding: 10px 0 18px; }
-  .desk-hero h1 { font-size: 28px; letter-spacing: -.6px; }
-  .desk-hero p { font-size: 13px; }
-  .desk-kicker { font-size: 9px; letter-spacing: 1.4px; }
-  #settings-layout { display: flex; flex-direction: column; }
-  #discovery-panel, #summary-panel { width: 100%; min-width: 0 !important; padding: 14px; }
-  #action-row { flex-direction: column; }
-  #action-row button { width: 100%; min-width: 0 !important; }
-  #operation-status { padding: 10px 12px; font-size: 12px; }
-  .report-frame { height: 580px; border-radius: 6px; }
+  .gradio-container { padding: 16px 14px 32px !important; }
+  #workspace-header { gap: 12px; }
+  #main-settings { padding: 18px 16px; }
+  .desk-hero h1 { font-size: 25px; }
 }

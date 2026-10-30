@@ -6,7 +6,7 @@ import html
 import re
 from pathlib import Path
 
-from .matching import selected_repositories
+from .matching import has_work_requirements, selected_repositories
 
 COPY = {
     "en": {
@@ -23,11 +23,18 @@ COPY = {
         "stars": "stars",
         "today": "{count} today",
         "unknown": "Not specified",
-        "work_filter": "Work filter · at least {minimum} keyword(s): {keywords}. "
-        "Exclude: {excluded}.",
         "matched": "Matched work keywords",
+        "relevance": "Work relevance",
+        "direct": "Directly relevant",
+        "transferable": "Potentially reusable",
+        "domain_and_capability": "Matches your field and work tasks",
+        "transferable_capability": "Provides a tool capability reusable in your work",
+        "project_purpose": "The project purpose matches your work focus",
+        "specific_terms": "Matches specific terms in your description",
+        "model": "AI-generated introduction based on the source README; not independently tested.",
+        "use_case": "How you could use it",
         "no_matches": "No repositories matched these work requirements. "
-        "Try broader keywords or fewer exclusions.",
+        "Try a different work description or leave it empty to include all projects.",
         "extractive": "README excerpts · summary pending in the selected language. "
         "Source language preserved.",
         "unavailable": "README unavailable; no project claims have been generated.",
@@ -36,10 +43,17 @@ COPY = {
         "tested. Daily stars come from GitHub Trending at capture time.",
     },
     "zh-CN": {
-        "work_filter": "工作需求筛选 · 至少命中 {minimum} 个关键词：{keywords}。"
-        "排除词：{excluded}。",
         "matched": "匹配工作需求的关键词",
-        "no_matches": "没有仓库符合当前工作需求，可尝试扩大关键词范围或减少排除词。",
+        "relevance": "工作相关性",
+        "direct": "直接相关",
+        "transferable": "可迁移使用",
+        "domain_and_capability": "同时覆盖工作领域与任务方向",
+        "transferable_capability": "具备可用于当前工作的通用工具能力",
+        "project_purpose": "项目主要用途与工作方向相符",
+        "specific_terms": "命中描述中的具体技术词",
+        "model": "由大模型根据 README 生成，能力与适用性未经独立实测。",
+        "use_case": "可以怎么用",
+        "no_matches": "没有仓库符合当前工作内容，可换一种描述，或清空工作内容查看全部项目。",
         "title": "GitHub 技术快报",
         "archive": "快报归档",
         "latest": "最新一期",
@@ -81,14 +95,24 @@ def report_path(day: str, locale: str = "en", default: str = "en") -> str:
 
 def work_context(snapshot: dict, locale: str) -> list[str]:
     requirements = snapshot.get("work_requirements", {})
-    if not requirements.get("enabled"):
+    if not has_work_requirements(snapshot):
         return []
-    rule = COPY[locale]["work_filter"].format(
-        minimum=requirements["min_matches"],
-        keywords=", ".join(requirements["keywords"]),
-        excluded=", ".join(requirements["exclude_keywords"]) or "—",
+    return [requirements["description"]]
+
+
+def match_explanation(repo: dict, locale: str) -> str:
+    match = repo["work_match"]
+    copy = COPY[locale]
+    if match.get("method") == "llm":
+        return f"{copy[match['level']]} · {match['score']}/100 · {match['reason']}" + (
+            f" · {copy['use_case']}: {match['use_case']}" if match.get("use_case") else ""
+        )
+    terms = ", ".join(match["matched_keywords"][:8])
+    if "score" not in match:
+        return terms
+    return f"{copy[match['level']]} · {match['score']}/100 · {copy[match['reason']]}" + (
+        f" · {terms}" if terms else ""
     )
-    return [value for value in (requirements["description"], rule) if value]
 
 
 def render_digest(snapshot: dict, locale: str | None = None, stem: str | None = None) -> str:
@@ -108,7 +132,7 @@ def render_digest(snapshot: dict, locale: str | None = None, stem: str | None = 
     ]
     for context in work_context(snapshot, locale):
         lines.extend([f"> {safe_text(context)}", ""])
-    if not repos and snapshot.get("work_requirements", {}).get("enabled"):
+    if not repos and has_work_requirements(snapshot):
         lines.extend([copy["no_matches"], ""])
     for repo in repos:
         summary = repo["summary"]
@@ -126,8 +150,8 @@ def render_digest(snapshot: dict, locale: str | None = None, stem: str | None = 
         if summary["status"] != "curated":
             lines.extend([f"> {copy[summary['status']]}", ""])
         if "work_match" in repo:
-            matched = ", ".join(repo["work_match"]["matched_keywords"])
-            lines.extend([f"**{copy['matched']}**: {safe_text(matched)}", ""])
+            matched = match_explanation(repo, locale)
+            lines.extend([f"**{copy['relevance']}**: {safe_text(matched)}", ""])
         if text["purpose"]:
             lines.extend([f"**{copy['purpose']}**", "", safe_text(text["purpose"]), ""])
         if text["highlights"]:
@@ -174,7 +198,7 @@ def update_readme(
     ]
     for repo in selected_repositories(snapshot)[:3]:
         text = repo["summary"]["locales"][locale]["purpose"]
-        if repo["summary"]["status"] == "curated":
+        if repo["summary"]["status"] in {"curated", "model"}:
             lines.append(f"- **[{repo['name']}]({repo['url']})** — {safe_text(text)}")
         else:
             lines.append(f"- [{repo['name']}]({repo['url']}) · {copy[repo['summary']['status']]}")

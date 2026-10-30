@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from urllib.parse import urlsplit
 from zoneinfo import ZoneInfo
 
 import yaml
@@ -37,6 +38,7 @@ def validate_config(config: object) -> dict:
         "readme": {},
         "summary": {},
         "work_requirements": {},
+        "llm": {},
     }
     if config.keys() - defaults.keys():
         raise ValueError(f"Unknown configuration keys: {config.keys() - defaults.keys()}")
@@ -54,7 +56,7 @@ def validate_config(config: object) -> dict:
     for name, values in {
         "readme": {"max_chars": 24000, "timeout_seconds": 30, "workers": 4},
         "summary": {
-            "mode": "curated",
+            "mode": "model",
             "curated_file": "summaries.yaml",
             "fallback": "extractive",
             "highlights": 3,
@@ -67,8 +69,8 @@ def validate_config(config: object) -> dict:
     bounded_int(config["readme"]["timeout_seconds"], 1, 120, "readme.timeout_seconds")
     bounded_int(config["readme"]["workers"], 1, 8, "readme.workers")
     bounded_int(config["summary"]["highlights"], 1, 5, "summary.highlights")
-    if config["summary"]["mode"] not in {"curated", "extractive"}:
-        raise ValueError("summary.mode must be curated or extractive")
+    if config["summary"]["mode"] not in {"model", "curated", "extractive"}:
+        raise ValueError("summary.mode must be model, curated or extractive")
     if config["summary"]["fallback"] != "extractive":
         raise ValueError("summary.fallback must be extractive")
     if (
@@ -102,7 +104,40 @@ def validate_config(config: object) -> dict:
             unique.setdefault(value.strip().casefold(), value.strip())
         requirements[key] = list(unique.values())
     bounded_int(requirements["min_matches"], 1, 100, "work_requirements.min_matches")
-    if requirements["enabled"] and len(requirements["keywords"]) < requirements["min_matches"]:
-        raise ValueError("Enabled work_requirements needs at least min_matches distinct keywords")
-    config["work_requirements"] = requirements
+    description = requirements["description"].strip()
+    # Older named profiles may contain only explicit keywords. Migrate once on load.
+    if not description and requirements["enabled"] and requirements["keywords"]:
+        description = ", ".join(requirements["keywords"])
+    config["work_requirements"] = {"description": description}
+    model_defaults = {
+        "base_url": "http://127.0.0.1:11434/v1",
+        "model": "",
+        "api_key": "",
+        "api_key_env": "",
+        "timeout_seconds": 600,
+        "batch_size": 1,
+        "readme_max_chars": 4000,
+        "response_format": "json_object",
+    }
+    if not isinstance(config["llm"], dict) or config["llm"].keys() - model_defaults.keys():
+        raise ValueError("Invalid llm configuration")
+    config["llm"] = {**model_defaults, **config["llm"]}
+    for name in ("base_url", "model", "api_key", "api_key_env", "response_format"):
+        if not isinstance(config["llm"][name], str):
+            raise ValueError(f"llm.{name} must be a string")
+    endpoint = urlsplit(config["llm"]["base_url"])
+    if (
+        endpoint.scheme not in {"https", "http"}
+        or not endpoint.hostname
+        or endpoint.username
+        or endpoint.password
+        or endpoint.query
+        or endpoint.fragment
+    ):
+        raise ValueError("llm.base_url must be an HTTP(S) API root without credentials or query")
+    bounded_int(config["llm"]["timeout_seconds"], 1, 600, "llm.timeout_seconds")
+    bounded_int(config["llm"]["batch_size"], 1, 10, "llm.batch_size")
+    bounded_int(config["llm"]["readme_max_chars"], 1000, 50000, "llm.readme_max_chars")
+    if config["llm"]["response_format"] not in {"json_object", "json_schema", "text"}:
+        raise ValueError("llm.response_format must be json_object, json_schema or text")
     return config

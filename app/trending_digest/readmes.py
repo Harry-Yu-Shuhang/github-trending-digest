@@ -203,6 +203,6 @@ def enrich_repositories(
             }
         return repo
 
-    selected = repos if config["work_requirements"]["enabled"] else repos[: config["top_n"]]
+    selected = repos if config["work_requirements"]["description"] else repos[: config["top_n"]]
     with ThreadPoolExecutor(max_workers=config["readme"]["workers"]) as pool:
         return list(pool.map(enrich, selected)) + repos[len(selected) :]

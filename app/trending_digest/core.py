@@ -13,7 +13,6 @@ from zoneinfo import ZoneInfo
 from bs4 import BeautifulSoup
 
 from .config import load_config as load_config
-from .matching import apply_requirements
 
 USER_AGENT = "github-trending-digest/0.1 (+https://github.com/trending)"
 NAME = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+")
@@ -104,16 +103,14 @@ def parse_trending(html: str) -> list[dict]:
 
 def make_snapshot(repositories: list[dict], config: dict, now: datetime) -> dict:
     local = now.astimezone(ZoneInfo(config["timezone"]))
-    return apply_requirements(
-        {
-            "schema_version": 3,
-            "date": local.date().isoformat(),
-            "fetched_at": local.isoformat(timespec="seconds"),
-            "timezone": config["timezone"],
-            "source_url": trending_url(config),
-            "top_n": config["top_n"],
-            "active_language": config["active_language"],
-            "repositories": repositories,
-        },
-        config,
-    )
+    return {
+        "schema_version": 3,
+        "date": local.date().isoformat(),
+        "fetched_at": local.isoformat(timespec="seconds"),
+        "timezone": config["timezone"],
+        "source_url": trending_url(config),
+        "top_n": config["top_n"],
+        "active_language": config["active_language"],
+        "repositories": repositories,
+        "work_requirements": dict(config["work_requirements"]),
+    }

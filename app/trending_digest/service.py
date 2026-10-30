@@ -46,7 +46,10 @@ def list_profiles(root: Path) -> list[str]:
 
 def load_profile(root: Path, name: str) -> dict:
     with OPERATIONS:
-        return load_config(profile_path(root, name))
+        raw = yaml.safe_load(profile_path(root, name).read_text(encoding="utf-8"))
+        if isinstance(raw, dict) and "llm" not in raw and (root / "conf.yaml").exists():
+            raw["llm"] = load_config(root / "conf.yaml")["llm"]
+        return validate_config(raw)
 
 
 def save_configuration(root: Path, config: dict, *, profile_name: str | None = None) -> dict:
@@ -92,7 +95,7 @@ def saved_snapshot(root: Path, config: dict) -> dict:
             )
         if (
             index >= config["top_n"]
-            and not config["work_requirements"]["enabled"]
+            and not config["work_requirements"]["description"]
             and "summary" not in repo
         ):
             continue

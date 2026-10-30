@@ -36,6 +36,7 @@ SHA = "a" * 40
 
 
 def write_config(root: Path, **overrides) -> dict:
+    overrides.setdefault("llm", {"model": "test-model"})
     path = root / "conf.yaml"
     path.write_text(yaml.safe_dump(overrides), encoding="utf-8")
     return load_config(path)
@@ -71,7 +72,10 @@ class DigestTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
         (self.root / "docs").mkdir()
-        self.config = write_config(self.root, top_n=1)
+        self.config = write_config(self.root, top_n=1, summary={"mode": "curated"})
+        model_stage = patch("trending_digest.cli.apply_requirements", side_effect=lambda s, c: s)
+        model_stage.start()
+        self.addCleanup(model_stage.stop)
         self.repos = parse_trending(PAGE.read_text(encoding="utf-8"))
         with patch("trending_digest.readmes.fetch_readme", side_effect=readme_result):
             self.enriched = enrich_repositories(self.repos, self.root, self.config)

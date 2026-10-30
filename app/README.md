@@ -20,3 +20,8 @@ workspace with the same configuration, `docs/`, and `output/` layout.
 
 For offline generation, add `--html path/to/trending.html --readme-dir path/to/readmes`.
 The README directory uses `owner/repo/README.md` and `metadata.json`.
+This makes source fetching offline; introductions and relevance still call the configured
+model. Configure `llm` in the root `conf.yaml` first. Tests use an offline model fixture.
+
+The GUI shuts down eight seconds after its last browser tab closes. Use `--keep-alive`
+with `app/start.py` for a server that should keep running without browser sessions.

@@ -4,6 +4,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 import yaml
 
@@ -22,6 +23,27 @@ class ServiceTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
+
+        def source_only(repos, config):
+            for repo in repos:
+                repo.pop("work_match", None)
+                if config["work_requirements"]["description"]:
+                    repo["work_match"] = {
+                        "method": "llm",
+                        "useful": True,
+                        "score": 80,
+                        "level": "direct",
+                        "reason": "Saved source evidence",
+                        "use_case": "Read source notes",
+                        "matched_keywords": [],
+                    }
+            return repos
+
+        model_stage = patch(
+            "trending_digest.matching.analyze_repositories", side_effect=source_only
+        )
+        model_stage.start()
+        self.addCleanup(model_stage.stop)
         (self.root / "docs").mkdir()
         for name in ("README.md", "docs/README.zh-CN.md"):
             (self.root / name).write_text("<!-- digest:start -->\n<!-- digest:end -->")
@@ -122,6 +144,15 @@ class ServiceTests(unittest.TestCase):
         self.assertEqual((self.root / "configs/valid.yaml").read_bytes(), named_before)
         with self.assertRaises(FileNotFoundError):
             load_profile(self.root, "missing")
+
+    def test_older_profiles_inherit_current_model_configuration(self):
+        current = save_configuration(self.root, {"llm": {"model": "configured-model"}})
+        path = self.root / "configs/Old profile.yaml"
+        path.parent.mkdir(parents=True)
+        path.write_text("work_requirements:\n  description: game testing\n", encoding="utf-8")
+        loaded = load_profile(self.root, "Old profile")
+        self.assertEqual(loaded["llm"], current["llm"])
+        self.assertEqual(loaded["work_requirements"]["description"], "game testing")
 
     def test_legacy_cached_summary_evidence_survives_locale_switch(self):
         english = run_generation(self.root, {"active_language": "en"}, cached=True)

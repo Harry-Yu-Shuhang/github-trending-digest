@@ -1,505 +1,467 @@
-"""Local Gradio configuration editor and report workspace."""
+"""A compact local configuration and report workspace."""
 
 from __future__ import annotations
 
 import argparse
+import copy
 import html
+import logging
 import os
 import shutil
 import subprocess
+import time
+import webbrowser
 from importlib.resources import files
 from pathlib import Path
 
 import gradio as gr
 import yaml
-from bs4 import BeautifulSoup
 
 from .config import load_config, validate_config
+from .lifecycle import BrowserLifecycle
 from .matching import selected_repositories
 from .service import list_profiles, load_profile, run_generation, save_configuration
 
 os.environ.setdefault("GRADIO_ANALYTICS_ENABLED", "False")
+logger = logging.getLogger(__name__)
 
-FIELDS = [
-    "active_language",
-    "programming_language",
-    "spoken_language",
-    "top_n",
-    "timezone",
-    "max_chars",
-    "timeout_seconds",
-    "workers",
-    "mode",
-    "curated_file",
-    "fallback",
-    "highlights",
-    "work_requirements",
-]
 TEXT = {
     "en": {
-        "title": "Your daily open-source reading desk.",
-        "subtitle": "Tune the source, choose a language, "
-        "and turn project READMEs into a readable brief.",
-        "general": "### Reading & discovery",
-        "fetch": "### README & summaries",
+        "title": "Your daily open-source brief",
+        "subtitle": "Describe your work, then generate a report.",
         "active_language": "Language / 语言",
-        "language_hint": "Switch the interface instantly. Save configuration to remember "
-        "your choice and use it for reports.",
-        "programming_language": "Programming-language filter",
-        "spoken_language": "Project description-language filter",
-        "top_n": "Projects per issue",
-        "timezone": "Issue timezone",
-        "max_chars": "README excerpt input limit (characters)",
-        "timeout_seconds": "Request timeout (seconds)",
-        "workers": "Parallel README requests",
-        "mode": "Summary strategy",
-        "curated_file": "Saved summary file",
-        "fallback": "Fallback for new or changed READMEs",
-        "highlights": "Highlights per project",
-        "curated": "Prefer saved summaries",
-        "extractive": "Source excerpts",
-        "save": "Save configuration",
-        "profiles": "### Named configurations",
-        "profile": "Saved configuration",
-        "profile_name": "Configuration name",
-        "load_profile": "Load configuration",
-        "save_profile": "Save named configuration",
-        "profile_hint": "Named configurations are stored in `configs/<name>.yaml`. "
-        "Saving the same name replaces it and also updates conf.yaml. "
-        "Loading fills the form; Save or Generate applies it.",
-        "profile_saved": "Named configuration saved: {name}. conf.yaml updated.",
-        "profile_loaded": "Loaded configuration: {name}. Save or Generate to apply it.",
-        "work_requirements": "Work requirements (YAML)",
-        "work_hint": "Set enabled: true and enter keywords to select useful repositories. "
-        "description records your goal; matching uses literal keywords, not semantic AI. "
-        "Keywords ignore case; exclude_keywords veto a match. Use Chinese/English synonyms "
-        "as separate keywords. Cached runs use only the text saved in the snapshot.",
-        "generate": "Fetch & generate report",
-        "cached": "Generate from saved data",
-        "preview": "### Report preview",
-        "download": "Download HTML report",
-        "ready": "Ready. Changes are saved when you click Save or Generate.",
-        "changed": "Interface language updated. Save or Generate to keep this choice in conf.yaml.",
-        "saved": "Configuration saved. Future runs will generate only {language} reports.",
-        "done": "Report ready · {date} · {count} projects · {language}.",
-        "cached_done": "Report rendered from saved data · {date} · {count} projects · {language}. "
-        "No new fetch.",
-        "no_preview": "Generate a report in the selected language to preview it here.",
-        "hint": "Leave source filters empty for all projects. Saved-data generation reuses "
-        "the original capture and does not apply new source filters.",
+        "work_requirements": "Description",
+        "work_hint": "Optional. Leave empty to include all projects.",
+        "generate": "Generate",
+        "save": "Save config",
+        "load": "Load config",
+        "profile_name": "Configuration name (optional)",
+        "profile_name_hint": "Leave empty to save conf.yaml.",
+        "profile": "Configuration",
+        "confirm_save": "Save",
+        "confirm_load": "Load",
+        "cancel": "Cancel",
+        "saved": "Configuration saved.",
+        "profile_saved": "Saved configuration: {name}.",
+        "profile_loaded": "Loaded configuration: {name}.",
+        "changed": "Language updated.",
+        "done": "Report ready · {count} projects · {date}. Opened in your browser.",
+        "open_failed": "Report saved to {path}. Open this file in your browser.",
         "error": "Could not complete the operation",
-        "language_en": "English",
-        "language_zh": "Simplified Chinese",
+        "ready": "Ready to generate.",
+        "popup_success": "Done",
+        "popup_error": "Something went wrong",
+        "popup_info": "Report saved",
+        "popup_close": "OK",
+        "loading_generate": "Generating your report",
+        "loading_generate_hint": "Fetching repositories and preparing briefs. Please wait.",
+        "loading_save": "Saving configuration",
+        "loading_save_hint": "Saving your settings. Please wait.",
+        "loading_load": "Loading configuration",
+        "loading_load_hint": "Restoring the selected settings. Please wait.",
+        "connection_error": "Server connection interrupted. Please check the workspace and retry.",
+        "unexpected_error": "An unexpected error occurred. Check the terminal log and retry.",
     },
     "zh-CN": {
-        "profiles": "### 命名配置",
-        "profile": "已保存的配置",
-        "profile_name": "配置名称",
-        "load_profile": "加载配置",
-        "save_profile": "保存命名配置",
-        "profile_hint": "配置保存到 `configs/<名称>.yaml`；同名保存会覆盖，并更新 conf.yaml。"
-        "加载只填充表单，点击保存或生成后应用。",
-        "profile_saved": "已保存命名配置：{name}，并更新 conf.yaml。",
-        "profile_loaded": "已加载配置：{name}。点击保存或生成后应用。",
-        "work_requirements": "工作需求（YAML）",
-        "work_hint": "设置 enabled: true 并填写 keywords，筛选有用的仓库。"
-        "description 记录工作目标；"
-        "实际按关键词匹配，不进行 AI 语义分析。忽略大小写，命中 exclude_keywords 则排除。"
-        "中英文同义词请分别填写。使用已保存数据时，仅按快照中已有的文本重新筛选。",
-        "title": "你的每日开源阅读工作台。",
-        "subtitle": "调整抓取来源，选择阅读语言，把项目 README 整理成易读的技术快报。",
-        "general": "### 阅读与项目发现",
-        "fetch": "### README 与摘要",
+        "title": "每日开源快报",
+        "subtitle": "描述你的工作，一键生成相关项目报告。",
         "active_language": "Language / 语言",
-        "language_hint": "切换后界面立即生效；点击保存配置后记住选择，并用于生成报告。",
-        "programming_language": "编程语言筛选",
-        "spoken_language": "项目描述语言筛选",
-        "top_n": "每期项目数量",
-        "timezone": "快报时区",
-        "max_chars": "README 摘录输入上限（字符）",
-        "timeout_seconds": "请求超时（秒）",
-        "workers": "README 抓取并发数",
-        "mode": "摘要策略",
-        "curated_file": "已整理摘要文件",
-        "fallback": "新增或有变化的 README 如何处理",
-        "highlights": "每个项目的亮点数量",
-        "curated": "优先使用已整理摘要",
-        "extractive": "来源原文摘录",
+        "work_requirements": "工作描述",
+        "work_hint": "可选，留空查看全部项目。",
+        "generate": "生成报告",
         "save": "保存配置",
-        "generate": "抓取并生成报告",
-        "cached": "用已保存数据生成",
-        "preview": "### 报告预览",
-        "download": "下载 HTML 报告",
-        "ready": "已就绪。点击保存或生成时，才会将修改写入配置。",
-        "changed": "界面语言已切换。点击保存或生成后，此选择会写入 conf.yaml。",
-        "saved": "配置已保存，后续运行只生成{language}报告。",
-        "done": "报告已生成 · {date} · {count} 个项目 · {language}。",
-        "cached_done": "已使用保存的数据生成 · {date} · {count} 个项目 · {language}。未重新抓取。",
-        "no_preview": "生成当前所选语言的报告后，可在此预览。",
-        "hint": "来源筛选留空表示全部项目。使用已保存数据时沿用原采集结果，不应用新的来源筛选。",
+        "load": "加载配置",
+        "profile_name": "配置名称（可选）",
+        "profile_name_hint": "留空保存当前 conf.yaml。",
+        "profile": "选择配置",
+        "confirm_save": "保存",
+        "confirm_load": "加载",
+        "cancel": "取消",
+        "saved": "配置已保存。",
+        "profile_saved": "已保存配置：{name}。",
+        "profile_loaded": "已加载配置：{name}。",
+        "changed": "语言已切换。",
+        "done": "报告已生成 · {count} 个项目 · {date}，已在浏览器中打开。",
+        "open_failed": "报告已保存到 {path}，可在浏览器中打开此文件。",
         "error": "操作未完成",
-        "language_en": "英文",
-        "language_zh": "中文",
+        "ready": "已就绪，可以生成报告。",
+        "popup_success": "操作成功",
+        "popup_error": "操作未完成",
+        "popup_info": "报告已保存",
+        "popup_close": "知道了",
+        "loading_generate": "正在生成报告",
+        "loading_generate_hint": "正在获取仓库并调用模型整理简报，请稍候。",
+        "loading_save": "正在保存配置",
+        "loading_save_hint": "正在保存你的设置，请稍候。",
+        "loading_load": "正在加载配置",
+        "loading_load_hint": "正在恢复所选配置，请稍候。",
+        "connection_error": "与服务的连接已中断，请检查工作台后重试。",
+        "unexpected_error": "遇到意外错误，请查看启动终端中的记录后重试。",
     },
 }
 
 
-def form_values(config: dict) -> list:
-    return [
-        yaml.safe_dump(config[key], allow_unicode=True, sort_keys=False)
-        if key == "work_requirements"
-        else config[key]
-        if key in config
-        else config["readme"].get(key, config["summary"].get(key))
-        for key in FIELDS
-    ]
+def feedback_payload(locale: str, kind: str, message: str) -> dict:
+    copy = TEXT[locale]
+    return {
+        "kind": kind,
+        "title": copy[f"popup_{kind}"],
+        "message": message,
+        "close": copy["popup_close"],
+        "id": str(time.time_ns()),
+    }
 
 
-def config_from_values(values: list) -> dict:
-    fields = dict(zip(FIELDS, values, strict=True))
-    for key in ("top_n", "max_chars", "timeout_seconds", "workers", "highlights"):
-        number = fields[key]
-        if (
-            isinstance(number, bool)
-            or not isinstance(number, (int, float))
-            or int(number) != number
-        ):
-            raise ValueError(f"{key} must be an integer")
-        fields[key] = int(number)
-    return validate_config(
-        {
-            **{key: fields[key] for key in FIELDS[:5]},
-            "readme": {key: fields[key] for key in FIELDS[5:8]},
-            "summary": {key: fields[key] for key in FIELDS[8:12]},
-            "work_requirements": yaml.safe_load(fields["work_requirements"]),
-        }
+def error_feedback(locale: str, exc: Exception) -> dict:
+    if isinstance(exc, (ValueError, OSError, KeyError, TypeError, yaml.YAMLError)):
+        message = str(exc)
+    else:
+        logger.exception("Unexpected workspace operation failure")
+        message = TEXT[locale]["unexpected_error"]
+    return feedback_payload(locale, "error", message)
+
+
+def feedback_loading_js(operation: str) -> str:
+    return (
+        "(...args) => { window.trendingFeedback?.loading(args[1], "
+        + repr(operation)
+        + "); return args; }"
     )
+
+
+def edited_config(base: dict, locale: str, description: str) -> dict:
+    checked = copy.deepcopy(base)
+    checked["active_language"] = locale
+    checked["work_requirements"] = {"description": description}
+    return validate_config(checked)
 
 
 def hero(locale: str) -> str:
     text = TEXT[locale]
     return (
-        f'<div class="desk-hero"><span class="desk-kicker">TRENDING BRIEF / STUDIO</span>'
+        '<div class="desk-hero"><span class="desk-kicker">TRENDING BRIEF</span>'
         f"<h1>{text['title']}</h1><p>{text['subtitle']}</p></div>"
     )
 
 
-def report_preview(root: Path, locale: str) -> tuple[str, str | None]:
+def open_report(root: Path) -> bool:
     path = root / "output/reports/index.html"
-    if path.exists():
-        soup = BeautifulSoup(path.read_text(encoding="utf-8"), "html.parser")
-        if soup.html and soup.html.get("lang") == locale:
-            # The embedded preview has no filesystem context. Downloads retain full navigation.
-            for navigation in soup.select(".primary-nav, .locale-switch"):
-                navigation.decompose()
-            for link in soup.select(".wordmark, .footer-brand"):
-                link["href"] = "#top"
-            content = html.escape(str(soup), quote=True)
-            return (
-                f'<iframe class="report-frame" title="{TEXT[locale]["download"]}" '
-                'sandbox="allow-scripts allow-modals allow-popups '
-                'allow-popups-to-escape-sandbox" '
-                f'srcdoc="{content}"></iframe>',
-                str(path),
-            )
-    return f'<div class="preview-empty">{TEXT[locale]["no_preview"]}</div>', None
+    if not path.is_file():
+        raise FileNotFoundError("The generated HTML report is missing")
+    try:
+        return webbrowser.open_new_tab(path.resolve().as_uri())
+    except (OSError, webbrowser.Error):
+        return False
 
 
-def create_ui(root: Path) -> gr.Blocks:
+def create_ui(root: Path, lifecycle: BrowserLifecycle | None = None) -> gr.Blocks:
     config = load_config(root / "conf.yaml")
     locale = config["active_language"]
     text = TEXT[locale]
-    initial = dict(zip(FIELDS, form_values(config), strict=True))
-    with gr.Blocks(title="Trending Brief Studio", fill_width=True, analytics_enabled=False) as app:
+
+    def choices():
+        return [("conf.yaml", ""), *((name, name) for name in list_profiles(root))]
+
+    with gr.Blocks(title="Trending Brief", fill_width=True, analytics_enabled=False) as app:
+        config_state = gr.State(config)
+        selected_profile = gr.State("")
         with gr.Row(elem_id="workspace-header"):
-            with gr.Column(scale=4, min_width=260):
+            with gr.Column(scale=4, min_width=240):
                 heading = gr.HTML(hero(locale))
-            with gr.Column(scale=1, min_width=180, elem_id="workspace-language"):
+            with gr.Column(scale=1, min_width=170):
                 language = gr.Dropdown(
                     choices=[("English", "en"), ("简体中文", "zh-CN")],
                     value=locale,
                     label=text["active_language"],
-                    info=text["language_hint"],
                     elem_id="active-language",
                     interactive=True,
                 )
-        profiles_title = gr.Markdown(text["profiles"])
-        with gr.Row(elem_id="profile-row"):
-            profile = gr.Dropdown(
-                choices=list_profiles(root),
-                label=text["profile"],
-                elem_id="saved-profile",
-                interactive=True,
-                min_width=180,
+        with gr.Column(elem_id="main-settings"):
+            requirements = gr.Textbox(
+                value=config["work_requirements"]["description"],
+                label=text["work_requirements"],
+                info=text["work_hint"],
+                lines=4,
+                max_lines=8,
+                elem_id="work-requirements",
             )
-            load_named = gr.Button(text["load_profile"], min_width=140)
-            profile_name = gr.Textbox(
-                label=text["profile_name"],
-                elem_id="profile-name",
-                min_width=180,
-            )
-            save_named = gr.Button(text["save_profile"], min_width=160)
-        profiles_hint = gr.Markdown(text["profile_hint"])
-        with gr.Row(elem_id="settings-layout", equal_height=True):
-            with gr.Column(min_width=260, scale=1, elem_id="discovery-panel"):
-                general_title = gr.Markdown(text["general"])
-                with gr.Row():
-                    programming = gr.Textbox(
-                        value=initial["programming_language"],
-                        label=text["programming_language"],
-                        placeholder="python, rust, c++…",
-                        min_width=120,
-                    )
-                    spoken = gr.Textbox(
-                        value=initial["spoken_language"],
-                        label=text["spoken_language"],
-                        placeholder="zh, en…",
-                        min_width=120,
-                    )
-                top = gr.Slider(1, 25, value=config["top_n"], step=1, label=text["top_n"])
-                timezone = gr.Textbox(
-                    value=config["timezone"], label=text["timezone"], placeholder="Asia/Shanghai"
+            with gr.Row(elem_id="action-row"):
+                save = gr.Button(text["save"], min_width=110, scale=1, elem_id="save-config")
+                load = gr.Button(text["load"], min_width=110, scale=1, elem_id="load-config")
+                generate = gr.Button(
+                    text["generate"],
+                    variant="primary",
+                    min_width=150,
+                    scale=2,
+                    elem_id="generate-report",
                 )
-                hint = gr.Markdown(text["hint"], elem_id="settings-hint")
-                requirements = gr.Textbox(
-                    value=initial["work_requirements"],
-                    label=text["work_requirements"],
-                    lines=9,
-                    max_lines=18,
-                    elem_id="work-requirements",
-                )
-                work_hint = gr.Markdown(text["work_hint"])
-            with gr.Column(min_width=260, scale=1, elem_id="summary-panel"):
-                fetch_title = gr.Markdown(text["fetch"])
-                with gr.Row():
-                    timeout = gr.Number(
-                        value=initial["timeout_seconds"],
-                        precision=0,
-                        label=text["timeout_seconds"],
-                        minimum=1,
-                        maximum=120,
-                        min_width=120,
-                    )
-                    workers = gr.Number(
-                        value=initial["workers"],
-                        precision=0,
-                        label=text["workers"],
-                        minimum=1,
-                        maximum=8,
-                        min_width=120,
-                    )
-                maximum = gr.Number(
-                    value=initial["max_chars"],
-                    precision=0,
-                    label=text["max_chars"],
-                    minimum=1000,
-                    maximum=100000,
+            with gr.Group(visible=False, elem_id="save-config-panel") as save_panel:
+                profile_name = gr.Textbox(
+                    label=text["profile_name"],
+                    info=text["profile_name_hint"],
+                    elem_id="profile-name",
                 )
                 with gr.Row():
-                    mode = gr.Dropdown(
-                        choices=[(text["curated"], "curated"), (text["extractive"], "extractive")],
-                        value=initial["mode"],
-                        label=text["mode"],
-                        min_width=120,
-                    )
-                    highlights = gr.Slider(
-                        1,
-                        5,
-                        value=initial["highlights"],
-                        step=1,
-                        label=text["highlights"],
-                        min_width=120,
-                    )
-                curated = gr.Textbox(value=initial["curated_file"], label=text["curated_file"])
-                fallback = gr.Dropdown(
-                    choices=[(text["extractive"], "extractive")],
-                    value="extractive",
-                    label=text["fallback"],
-                    interactive=False,
+                    confirm_save = gr.Button(text["confirm_save"], variant="primary")
+                    cancel_save = gr.Button(text["cancel"])
+            with gr.Group(visible=False, elem_id="load-config-panel") as load_panel:
+                profile = gr.Dropdown(
+                    choices=choices(),
+                    value="",
+                    label=text["profile"],
+                    interactive=True,
+                    elem_id="saved-profile",
                 )
-        with gr.Row(elem_id="action-row"):
-            save = gr.Button(text["save"], variant="secondary", min_width=140)
-            cached = gr.Button(text["cached"], variant="secondary", min_width=140)
-            generate = gr.Button(text["generate"], variant="primary", min_width=160)
-        status = gr.Markdown(text["ready"], elem_id="operation-status")
-        preview_title = gr.Markdown(text["preview"])
-        preview_html, report_file = report_preview(root, locale)
-        preview = gr.HTML(preview_html, elem_id="report-preview")
-        download = gr.File(value=report_file, label=text["download"], interactive=False)
-
-        widgets = dict(
-            zip(
-                FIELDS,
-                [
-                    language,
-                    programming,
-                    spoken,
-                    top,
-                    timezone,
-                    maximum,
-                    timeout,
-                    workers,
-                    mode,
-                    curated,
-                    fallback,
-                    highlights,
-                    requirements,
-                ],
-                strict=True,
-            )
+                with gr.Row():
+                    confirm_load = gr.Button(text["confirm_load"], variant="primary")
+                    cancel_load = gr.Button(text["cancel"])
+            status = gr.Markdown(text["ready"], elem_id="operation-status")
+        resources = files("trending_digest").joinpath("templates")
+        labels = {
+            locale: {
+                **{
+                    operation: {
+                        "title": copy[f"loading_{operation}"],
+                        "message": copy[f"loading_{operation}_hint"],
+                    }
+                    for operation in ("generate", "save", "load")
+                },
+                "error": copy["popup_error"],
+                "connection": copy["connection_error"],
+                "close": copy["popup_close"],
+            }
+            for locale, copy in TEXT.items()
+        }
+        feedback = gr.HTML(
+            {"kind": "idle", "labels": labels},
+            html_template=resources.joinpath("feedback.html").read_text(encoding="utf-8"),
+            js_on_load=resources.joinpath("feedback.js").read_text(encoding="utf-8"),
+            elem_id="operation-feedback",
+            min_height=0,
+            padding=False,
         )
-        inputs = [widgets[key] for key in FIELDS]
+
         translated = [
             heading,
-            general_title,
-            fetch_title,
-            hint,
-            *inputs,
+            language,
+            requirements,
             save,
-            cached,
+            load,
             generate,
             status,
-            preview_title,
-            preview,
-            download,
-            profiles_title,
-            profile,
-            load_named,
             profile_name,
-            save_named,
-            profiles_hint,
-            work_hint,
+            profile,
+            confirm_save,
+            confirm_load,
+            cancel_save,
+            cancel_load,
         ]
 
-        def localize(selected):
-            copy = TEXT[selected]
-            updates = [
-                gr.update(value=hero(selected)),
-                gr.update(value=copy["general"]),
-                gr.update(value=copy["fetch"]),
-                gr.update(value=copy["hint"]),
-            ]
-            for key in FIELDS:
-                params = {"label": copy[key]}
-                if key == "active_language":
-                    params["info"] = copy["language_hint"]
-                if key == "mode":
-                    params["choices"] = [
-                        (copy["curated"], "curated"),
-                        (copy["extractive"], "extractive"),
-                    ]
-                if key == "fallback":
-                    params["choices"] = [(copy["extractive"], "extractive")]
-                updates.append(gr.update(**params))
-            content, filename = report_preview(root, selected)
-            return [
-                *updates,
-                gr.update(value=copy["save"]),
-                gr.update(value=copy["cached"]),
-                gr.update(value=copy["generate"]),
-                copy["changed"],
-                copy["preview"],
-                content,
-                gr.update(value=filename, label=copy["download"]),
-                gr.update(value=copy["profiles"]),
-                gr.update(label=copy["profile"]),
-                gr.update(value=copy["load_profile"]),
-                gr.update(label=copy["profile_name"]),
-                gr.update(value=copy["save_profile"]),
-                gr.update(value=copy["profile_hint"]),
-                gr.update(value=copy["work_hint"]),
-            ]
+        def translate(locale, *, checked=None, message=None):
+            copy = TEXT[locale]
+            language_params = {"label": copy["active_language"]}
+            description_params = {"label": copy["work_requirements"], "info": copy["work_hint"]}
+            if checked:
+                language_params["value"] = checked["active_language"]
+                description_params["value"] = checked["work_requirements"]["description"]
+            return {
+                heading: gr.update(value=hero(locale)),
+                language: gr.update(**language_params),
+                requirements: gr.update(**description_params),
+                save: gr.update(value=copy["save"]),
+                load: gr.update(value=copy["load"]),
+                generate: gr.update(value=copy["generate"]),
+                status: message or copy["changed"],
+                profile_name: gr.update(label=copy["profile_name"], info=copy["profile_name_hint"]),
+                profile: gr.update(label=copy["profile"], choices=choices()),
+                confirm_save: gr.update(value=copy["confirm_save"]),
+                confirm_load: gr.update(value=copy["confirm_load"]),
+                cancel_save: gr.update(value=copy["cancel"]),
+                cancel_load: gr.update(value=copy["cancel"]),
+            }
 
-        def save_form(*values):
-            selected = values[0]
-            try:
-                checked = save_configuration(root, config_from_values(list(values)))
-                label = TEXT[selected][
-                    "language_en" if checked["active_language"] == "en" else "language_zh"
-                ]
-                return TEXT[selected]["saved"].format(language=label)
-            except (ValueError, OSError, KeyError, TypeError, yaml.YAMLError) as exc:
-                raise gr.Error(f"{TEXT[selected]['error']}: {exc}") from exc
+        def localize(locale):
+            return translate(locale)
 
-        def generate_form(*values, use_saved=False):
-            selected = values[0]
+        def restore(request: gr.Request):
+            if lifecycle:
+                lifecycle.connect(request.session_hash)
             try:
-                snapshot = run_generation(root, config_from_values(list(values)), cached=use_saved)
-                content, filename = report_preview(root, selected)
-                label = TEXT[selected]["language_en" if selected == "en" else "language_zh"]
-                message = TEXT[selected]["cached_done" if use_saved else "done"].format(
-                    date=snapshot["date"],
-                    count=len(selected_repositories(snapshot)),
-                    language=label,
+                checked = load_config(root / "conf.yaml")
+                return {
+                    **translate(
+                        checked["active_language"],
+                        checked=checked,
+                        message=TEXT[checked["active_language"]]["ready"],
+                    ),
+                    config_state: checked,
+                }
+            except Exception as exc:
+                return {feedback: error_feedback(locale, exc), status: TEXT[locale]["error"]}
+
+        def show_save(name):
+            return gr.update(visible=True), gr.update(visible=False), gr.update(value=name)
+
+        def show_load(name, locale):
+            try:
+                available = list_profiles(root)
+                return {
+                    save_panel: gr.update(visible=False),
+                    load_panel: gr.update(visible=True),
+                    profile: gr.update(choices=choices(), value=name if name in available else ""),
+                }
+            except Exception as exc:
+                return {feedback: error_feedback(locale, exc)}
+
+        def save_form(base, locale, description, name):
+            try:
+                checked = edited_config(base, locale, description)
+                name = name.strip()
+                save_configuration(root, checked, profile_name=name or None)
+                message = (
+                    TEXT[locale]["profile_saved"].format(name=html.escape(name))
+                    if name
+                    else TEXT[locale]["saved"]
                 )
-                return message, content, filename
-            except (ValueError, OSError, KeyError, yaml.YAMLError) as exc:
-                raise gr.Error(f"{TEXT[selected]['error']}: {exc}") from exc
-
-        def form_updates(checked, message):
-            selected = checked["active_language"]
-            updates = localize(selected)
-            for index, value in enumerate(form_values(checked)):
-                updates[4 + index]["value"] = value
-            updates[4 + len(FIELDS) + 3] = message
-            updates[-6]["choices"] = list_profiles(root)
-            return updates
-
-        def restore():
-            checked = load_config(root / "conf.yaml")
-            return form_updates(checked, TEXT[checked["active_language"]]["ready"])
-
-        def save_named_form(name, *values):
-            selected = values[0]
-            try:
-                save_configuration(root, config_from_values(list(values)), profile_name=name)
                 return (
-                    TEXT[selected]["profile_saved"].format(name=html.escape(name)),
-                    gr.update(choices=list_profiles(root), value=name),
-                )
-            except (ValueError, OSError, KeyError, TypeError, yaml.YAMLError) as exc:
-                raise gr.Error(f"{TEXT[selected]['error']}: {exc}") from exc
-
-        def load_named_form(name, selected):
-            try:
-                checked = load_profile(root, name)
-                updates = form_updates(
                     checked,
-                    TEXT[checked["active_language"]]["profile_loaded"].format(
-                        name=html.escape(name)
+                    name,
+                    message,
+                    gr.update(visible=False),
+                    feedback_payload(locale, "success", message),
+                )
+            except Exception as exc:
+                return (
+                    gr.skip(),
+                    gr.skip(),
+                    TEXT[locale]["error"],
+                    gr.update(visible=True),
+                    error_feedback(locale, exc),
+                )
+
+        def load_form(name, locale):
+            try:
+                checked = load_profile(root, name) if name else load_config(root / "conf.yaml")
+                result = translate(
+                    checked["active_language"],
+                    checked=checked,
+                    message=TEXT[checked["active_language"]]["profile_loaded"].format(
+                        name=html.escape(name or "conf.yaml"),
                     ),
                 )
-                updates[-6]["value"] = name
-                updates[-4]["value"] = name
-                return updates
-            except (ValueError, OSError, KeyError, TypeError, yaml.YAMLError) as exc:
-                raise gr.Error(f"{TEXT[selected]['error']}: {exc}") from exc
+                result.update(
+                    {
+                        config_state: checked,
+                        selected_profile: name,
+                        save_panel: gr.update(visible=False),
+                        load_panel: gr.update(visible=False),
+                    }
+                )
+                result[profile] = gr.update(
+                    choices=choices(), value=name, label=TEXT[checked["active_language"]]["profile"]
+                )
+                result[feedback] = feedback_payload(
+                    checked["active_language"],
+                    "success",
+                    TEXT[checked["active_language"]]["profile_loaded"].format(
+                        name=name or "conf.yaml"
+                    ),
+                )
+                return result
+            except Exception as exc:
+                return {feedback: error_feedback(locale, exc), status: TEXT[locale]["error"]}
+
+        def generate_form(base, locale, description):
+            try:
+                checked = edited_config(base, locale, description)
+                snapshot = run_generation(root, checked)
+                opened = open_report(root)
+                message = (
+                    TEXT[locale]["done"].format(
+                        date=snapshot["date"],
+                        count=len(selected_repositories(snapshot)),
+                    )
+                    if opened
+                    else TEXT[locale]["open_failed"].format(
+                        path=html.escape(str(root / "output/reports/index.html")),
+                    )
+                )
+                return (
+                    checked,
+                    message,
+                    gr.update(visible=False),
+                    gr.update(visible=False),
+                    feedback_payload(locale, "success" if opened else "info", message),
+                )
+            except Exception as exc:
+                return (
+                    gr.skip(),
+                    TEXT[locale]["error"],
+                    gr.update(visible=False),
+                    gr.update(visible=False),
+                    error_feedback(locale, exc),
+                )
 
         language.input(
             localize,
             inputs=language,
             outputs=translated,
             queue=False,
+            show_progress="hidden",
             js="(language) => { document.documentElement.lang = language; return language; }",
         )
-        app.load(restore, outputs=translated, queue=False).then(
+        app.load(
+            restore,
+            outputs=[*translated, config_state, feedback],
+            queue=False,
+            show_progress="hidden",
+        ).then(
             fn=None,
             inputs=language,
             outputs=None,
             js="(language) => { document.documentElement.lang = language; }",
         )
-        save.click(save_form, inputs=inputs, outputs=status, concurrency_id="workspace")
-        save_named.click(
-            save_named_form,
-            inputs=[profile_name, *inputs],
-            outputs=[status, profile],
-            concurrency_id="workspace",
+        save.click(
+            show_save,
+            inputs=selected_profile,
+            outputs=[save_panel, load_panel, profile_name],
+            queue=False,
+            show_progress="hidden",
         )
-        load_named.click(
-            load_named_form,
-            inputs=[profile, language],
-            outputs=translated,
+        load.click(
+            show_load,
+            inputs=[selected_profile, language],
+            outputs=[save_panel, load_panel, profile, feedback],
+            queue=False,
+            show_progress="hidden",
+        )
+        cancel_save.click(lambda: gr.update(visible=False), outputs=save_panel, queue=False)
+        cancel_load.click(lambda: gr.update(visible=False), outputs=load_panel, queue=False)
+        confirm_save.click(
+            save_form,
+            inputs=[config_state, language, requirements, profile_name],
+            outputs=[config_state, selected_profile, status, save_panel, feedback],
             concurrency_id="workspace",
+            show_progress="hidden",
+            js=feedback_loading_js("save"),
+        ).failure(
+            fn=None,
+            inputs=language,
+            outputs=None,
+            js="locale => { window.trendingFeedback?.failed(locale); }",
+        )
+        confirm_load.click(
+            load_form,
+            inputs=[profile, language],
+            outputs=[*translated, config_state, selected_profile, save_panel, load_panel, feedback],
+            concurrency_id="workspace",
+            show_progress="hidden",
+            js=feedback_loading_js("load"),
+        ).failure(
+            fn=None,
+            inputs=language,
+            outputs=None,
+            js="locale => { window.trendingFeedback?.failed(locale); }",
         ).then(
             fn=None,
             inputs=language,
@@ -508,16 +470,29 @@ def create_ui(root: Path) -> gr.Blocks:
         )
         generate.click(
             generate_form,
-            inputs=inputs,
-            outputs=[status, preview, download],
+            inputs=[config_state, language, requirements],
+            outputs=[config_state, status, save_panel, load_panel, feedback],
             concurrency_id="workspace",
+            show_progress="hidden",
+            js=feedback_loading_js("generate"),
+            trigger_mode="once",
+        ).failure(
+            fn=None,
+            inputs=language,
+            outputs=None,
+            js="locale => { window.trendingFeedback?.failed(locale); }",
         )
-        cached.click(
-            lambda *values: generate_form(*values, use_saved=True),
-            inputs=inputs,
-            outputs=[status, preview, download],
-            concurrency_id="workspace",
-        )
+        if lifecycle:
+
+            def connected(request: gr.Request):
+                lifecycle.connect(request.session_hash)
+
+            def disconnected(request: gr.Request):
+                lifecycle.disconnect(request.session_hash)
+
+            # Gradio's persistent heartbeat detects closed tabs; the timer repairs reconnects.
+            gr.Timer(3).tick(connected, queue=False, api_visibility="private")
+            app.unload(disconnected)
     return app.queue(default_concurrency_limit=1)
 
 
@@ -530,6 +505,11 @@ def main() -> None:
         help="Use a fixed port; by default, automatically try available ports starting at 7860",
     )
     parser.add_argument("--no-browser", action="store_true")
+    parser.add_argument(
+        "--keep-alive",
+        action="store_true",
+        help="Keep the server running after workspace tabs are closed",
+    )
     args = parser.parse_args()
     root = args.root.resolve()
     if not os.environ.get("GITHUB_TOKEN"):
@@ -553,7 +533,8 @@ def main() -> None:
                 pass
         if token:
             os.environ["GITHUB_TOKEN"] = token
-    app = create_ui(root)
+    lifecycle = None if args.keep_alive else BrowserLifecycle()
+    app = create_ui(root, lifecycle=lifecycle)
     css = files("trending_digest").joinpath("templates/ui.css").read_text(encoding="utf-8")
     app.launch(
         server_name="127.0.0.1",
@@ -564,7 +545,15 @@ def main() -> None:
         theme=gr.themes.Soft(primary_hue="emerald", neutral_hue="stone"),
         footer_links=[],
         share=False,
+        prevent_thread_lock=True,
     )
+    try:
+        while lifecycle is None or not lifecycle.should_stop():
+            time.sleep(0.25)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        app.close()
 
 
 if __name__ == "__main__":

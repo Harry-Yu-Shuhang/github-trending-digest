@@ -11,8 +11,8 @@ from pathlib import Path
 from string import Template
 from urllib.parse import urlsplit
 
-from .matching import selected_repositories
-from .render import COPY, number, work_context
+from .matching import has_work_requirements, selected_repositories
+from .render import COPY, match_explanation, number, work_context
 
 TEXT = {
     "en": {
@@ -209,9 +209,9 @@ def render_html(snapshot: dict, locale: str | None = None, *, latest: bool = Fal
         daily = f"{number(repo['stars_today'], '+')} {text['today']}"
         match_note = ""
         if "work_match" in repo:
-            matched = ", ".join(repo["work_match"]["matched_keywords"])
+            matched = match_explanation(repo, locale)
             match_note = (
-                f'<p class="work-match"><strong>{COPY[locale]["matched"]}:</strong> '
+                f'<p class="work-match"><strong>{COPY[locale]["relevance"]}:</strong> '
                 f"{escape(matched)}</p>"
             )
         cards.append(f'''
@@ -249,7 +249,7 @@ def render_html(snapshot: dict, locale: str | None = None, *, latest: bool = Fal
     )
     if requirement_note:
         requirement_note = f'<aside class="work-requirements">{requirement_note}</aside>'
-    if not repos and snapshot.get("work_requirements", {}).get("enabled"):
+    if not repos and has_work_requirements(snapshot):
         requirement_note += f'<p class="work-requirements">{COPY[locale]["no_matches"]}</p>'
     content = f'''
 {requirement_note}
