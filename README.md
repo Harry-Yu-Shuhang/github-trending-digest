@@ -8,13 +8,13 @@ Choose English or Simplified Chinese with `active_language`. It controls the Gra
 
 <!-- digest:start -->
 
-### 2026-10-29 · Latest brief
+### 2026-10-30 · Latest brief
 
-[Read this issue](output/daily/2026/10/2026-10-29.md) · [Previous issues](output/daily/README.md)
+[Read this issue](output/daily/2026/10/2026-10-30.md) · [Previous issues](output/daily/README.md)
 
-- **[JetBrains/thinkrail](https://github.com/JetBrains/thinkrail)** — An agent-focused IDE built around the pi coding agent, combining code editing, isolated workspaces, and durable project knowledge.
-- **[elayadesign/ai-design-skills](https://github.com/elayadesign/ai-design-skills)** — A modular collection of design skills for AI coding tools that can read Markdown rules.
+- **[HKUDS/DeepTutor](https://github.com/HKUDS/DeepTutor)** — An agent-native learning workspace connecting personalized tutoring, problem solving, quizzes, research, and study practice.
 - **[obra/superpowers](https://github.com/obra/superpowers)** — A composable skills framework that gives coding agents a software development process, from clarifying requirements to reviewing and finishing changes.
+- **[pbakaus/impeccable](https://github.com/pbakaus/impeccable)** — A design vocabulary and review toolkit that helps coding agents improve existing interfaces through targeted visual instructions.
 
 <!-- digest:end -->
 
